@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} - Financial Research Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #1a1a1a;
+            background: #ffffff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .header {
+            background: #003d5c;
+            color: white;
+            padding: 25px 40px;
+            border-bottom: 3px solid #002840;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-meta {
+            font-size: 13px;
+            color: #b8d4e6;
+            display: flex;
+            gap: 25px;
+        }
+
+        .investment-thesis {
+            background: #f0f7fc;
+            padding: 15px 40px;
+            border-bottom: 2px solid #003d5c;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .investment-thesis strong {
+            color: #003d5c;
+        }
+
+        .metrics-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0;
+            border-bottom: 2px solid #003d5c;
+        }
+
+        .metric {
+            padding: 18px 25px;
+            background: #f8f9fa;
+            border-right: 1px solid #d1d5db;
+            text-align: center;
+        }
+
+        .metric:last-child {
+            border-right: none;
+        }
+
+        .metric-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #003d5c;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .metric-number.positive {
+            color: #0a7c42;
+        }
+
+        .metric-number.negative {
+            color: #c41e3a;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .metric-change {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .metric-change.positive {
+            color: #0a7c42;
+        }
+
+        .metric-change.negative {
+            color: #c41e3a;
+        }
+
+        .content {
+            padding: 30px 40px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #003d5c;
+            margin: 28px 0 14px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #003d5c;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            line-height: 1.3;
+        }
+
+        .subsection-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 20px 0 10px 0;
+            line-height: 1.4;
+        }
+
+        .executive-summary {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #003d5c;
+        }
+
+        .executive-summary p {
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        p {
+            margin-bottom: 14px;
+            line-height: 1.7;
+            text-align: left;
+        }
+
+        .content > p,
+        .section p {
+            margin-bottom: 16px;
+        }
+
+        /* Financial Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            background: #003d5c;
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table th.numeric {
+            text-align: right;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .data-table td.numeric {
+            text-align: right;
+            font-family: "SF Mono", Monaco, "Courier New", monospace;
+        }
+
+        .data-table td.positive {
+            color: #0a7c42;
+        }
+
+        .data-table td.negative {
+            color: #c41e3a;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .data-table tr.highlight {
+            background: #f0f7fc;
+            font-weight: 600;
+        }
+
+        /* Risk Matrix */
+        .risk-high {
+            background: #fce8e8;
+            color: #c41e3a;
+            padding: 2px 8px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .risk-medium {
+            background: #fff3cd;
+            color: #856404;
+            padding: 2px 8px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .risk-low {
+            background: #d4edda;
+            color: #0a7c42;
+            padding: 2px 8px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        /* Thesis Cards */
+        .thesis-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .thesis-card {
+            padding: 15px;
+            border-left: 3px solid #003d5c;
+        }
+
+        .thesis-card.bull {
+            background: #d4edda;
+            border-left-color: #0a7c42;
+        }
+
+        .thesis-card.base {
+            background: #f8f9fa;
+            border-left-color: #003d5c;
+        }
+
+        .thesis-card.bear {
+            background: #fce8e8;
+            border-left-color: #c41e3a;
+        }
+
+        .thesis-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .thesis-card.bull h4 {
+            color: #0a7c42;
+        }
+
+        .thesis-card.base h4 {
+            color: #003d5c;
+        }
+
+        .thesis-card.bear h4 {
+            color: #c41e3a;
+        }
+
+        ul, ol {
+            margin: 14px 0 14px 24px;
+            padding-left: 0;
+        }
+
+        li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            padding-left: 6px;
+        }
+
+        .key-insight {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-left: 3px solid #003d5c;
+            padding: 12px;
+            margin: 12px 0;
+        }
+
+        .key-insight strong {
+            color: #003d5c;
+            font-weight: 600;
+        }
+
+        .citation {
+            color: #003d5c;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            position: relative;
+            padding: 1px 3px;
+            background: #f0f7fc;
+            font-size: 12px;
+        }
+
+        .citation:hover {
+            background: #003d5c;
+            color: white;
+        }
+
+        .citation-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 8px;
+            background: white;
+            border: 2px solid #003d5c;
+            box-shadow: 0 4px 12px rgba(0, 61, 92, 0.15);
+            padding: 12px;
+            min-width: 300px;
+            max-width: 450px;
+            z-index: 1000;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .citation:hover .citation-tooltip {
+            display: block;
+        }
+
+        .tooltip-title {
+            font-weight: 700;
+            color: #003d5c;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .tooltip-source {
+            color: #4a5568;
+            font-size: 11px;
+        }
+
+        .tooltip-tier {
+            display: inline-block;
+            background: #003d5c;
+            color: white;
+            padding: 1px 6px;
+            font-size: 10px;
+            margin-top: 6px;
+        }
+
+        .bibliography {
+            background: #f8f9fa;
+            padding: 30px;
+            margin-top: 40px;
+            border-left: 4px solid #003d5c;
+        }
+
+        .bibliography-content {
+            background: #f8f9fa;
+            padding: 20px 0;
+        }
+
+        .bib-tier {
+            margin-bottom: 20px;
+        }
+
+        .bib-tier-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #003d5c;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .bib-entry {
+            margin-bottom: 14px;
+            padding-left: 45px;
+            text-indent: -45px;
+            line-height: 1.5;
+            font-size: 12px;
+        }
+
+        .bib-number {
+            color: #003d5c;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+
+        .bib-entry a {
+            color: #003d5c;
+            word-wrap: break-word;
+            text-decoration: none;
+        }
+
+        .bib-entry a:hover {
+            text-decoration: underline;
+        }
+
+        strong {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        /* Recommendation Badge */
+        .recommendation-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .recommendation-badge.buy {
+            background: #0a7c42;
+            color: white;
+        }
+
+        .recommendation-badge.hold {
+            background: #856404;
+            color: white;
+        }
+
+        .recommendation-badge.sell {
+            background: #c41e3a;
+            color: white;
+        }
+
+        @media print {
+            .container {
+                max-width: 100%;
+            }
+            .citation-tooltip {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .metrics-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .thesis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{TITLE}}</h1>
+            <div class="header-meta">
+                <span>{{DATE}}</span>
+                <span>|</span>
+                <span>{{SOURCE_COUNT}} Sources</span>
+                <span>|</span>
+                <span>Financial Deep Research</span>
+            </div>
+        </div>
+
+        <div class="investment-thesis">
+            <strong>Investment Thesis:</strong> {{INVESTMENT_THESIS}}
+        </div>
+
+        {{METRICS_DASHBOARD}}
+
+        <div class="content">
+            {{CONTENT}}
+
+            <div class="bibliography">
+                <div class="section-title">Bibliography</div>
+                {{BIBLIOGRAPHY}}
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
