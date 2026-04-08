@@ -11,10 +11,6 @@
       "description": "Browser automation CLI for AI agents. Use when the user needs to interact with websites, including navigating pages, filling forms, clicking buttons, taking screenshots, extracting data, testing web apps, or automating any browser task. Triggers include requests to \"open a website\", \"fill out a form\", \"click a button\", \"take a screenshot\", \"scrape data from a page\", \"test this web app\", \"login to a site\", \"automate browser actions\", or any task requiring programmatic web interaction."
     },
     {
-      "name": "cloud-schedule",
-      "description": "ReClaw/Zeroclaw-only: create, list, update, and delete scheduled tasks. Only works with the ReClaw (Zeroclaw) agent via messaging channels (Telegram, Slack, etc.). Does NOT work with Claude Code, Codex, Rebyte Code, or other coding agents — those should set schedules in the UI instead."
-    },
-    {
       "name": "context-lake",
       "description": "Access and manage structured data. Query your organization's connected databases, files, and services. Import your own CSV/Parquet/JSON files as queryable SQL tables. Build views that join across sources. All data is queryable via standard SQL."
     },
@@ -41,10 +37,6 @@
     {
       "name": "dynamodb-database",
       "description": "Provision DynamoDB NoSQL database for web apps. Use for key-value storage, document storage, high-performance NoSQL. Triggers include \"DynamoDB\", \"NoSQL\", \"key-value store\", \"document database\"."
-    },
-    {
-      "name": "echarts",
-      "description": "Create interactive charts and data visualizations using pyecharts (Python) and Apache ECharts. Use when user needs charts, graphs, or data visualizations rendered as HTML. Triggers include \"create chart\", \"make a graph\", \"visualize data\", \"bar chart\", \"line chart\", \"pie chart\", \"scatter plot\", \"heatmap\", \"data visualization\", \"plot this data\", \"chart this\". Do NOT use for static images or matplotlib-style charts."
     },
     {
       "name": "embed-assets",
@@ -77,10 +69,6 @@
     {
       "name": "internet-search",
       "description": "Search the internet for information. Use when you need to find current information, research topics, look up documentation, or verify facts. Triggers include \"search the web\", \"search internet\", \"look up\", \"find information\", \"google\", \"web search\", \"search for\"."
-    },
-    {
-      "name": "jimeng",
-      "description": "Generate images from text prompts using ByteDance Jimeng (Seedream) via Rebyte data API. High-quality image generation with up to 4K resolution. Triggers include \"generate image\", \"create image\", \"make a picture\", \"draw\", \"illustrate\", \"image of\", \"picture of\", \"jimeng\", \"seedream\", \"instant dream\"."
     },
     {
       "name": "learn-anything",
@@ -157,14 +145,6 @@
     {
       "name": "slide",
       "description": "Create presentation slide decks as a single HTML file with the widget aesthetic system. All slides live in one document as sections, sharing one theme. Rendered as a widget in chat. Optionally deploy as a standalone URL. No build tools or frameworks required. Triggers include \"create slides\", \"make a presentation\", \"build a deck\", \"HTML slides\", \"slide deck\", \"quick presentation\"."
-    },
-    {
-      "name": "slide-builder",
-      "description": "Create presentations using Slidev (Markdown-based slides). Triggers include \"create presentation\", \"make slides\", \"build slides\", \"slide deck\", \"tech talk\", \"conference slides\", \"pitch deck\". Handles the full workflow from content planning to deployment at rebyte.pro."
-    },
-    {
-      "name": "slide-workflow",
-      "description": "The slides app at /code/slides/. Create, iterate, and publish HTML decks. Each {slug}/ folder is a deck, the code agent is the app's runtime user. Visual magic over code editing."
     },
     {
       "name": "speech-to-text",
