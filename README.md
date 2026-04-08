@@ -41,6 +41,15 @@ Any skill may reference a fragment from `_common/` using:
 
 Includes are expanded when the skill is packaged.
 
+## Catalog
+
+[`catalog.json`](./catalog.json) is the single-file index an agent fetches to know what is available. Each entry has a `name` (= the directory) and a `description`, so the agent can pick relevant skills and install them via the skill-installer.
+
+Raw URL:
+```
+https://raw.githubusercontent.com/ReByteAI/rebyte-skills/main/catalog.json
+```
+
 ## Usage
 
 Inside the Rebyte platform, skills from this repo are referenced as `rebyteai/<slug>`. Outside Rebyte, clone this repository and point your skill loader at any directory that contains a `SKILL.md`.

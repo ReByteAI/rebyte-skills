@@ -1,0 +1,210 @@
+{
+  "source": "https://github.com/ReByteAI/rebyte-skills",
+  "description": "Rebyte featured skills — the recommended list for agents. Each entry's `name` is also its directory path in this repo; install via the skill-installer.",
+  "skills": [
+    {
+      "name": "ai-gateway",
+      "description": "Add AI/LLM capabilities to deployed applications. Provision an API key for your deployment to access OpenAI-compatible endpoints (GPT, Claude, Gemini) with usage billed to your organization."
+    },
+    {
+      "name": "browser-automation",
+      "description": "Browser automation CLI for AI agents. Use when the user needs to interact with websites, including navigating pages, filling forms, clicking buttons, taking screenshots, extracting data, testing web apps, or automating any browser task. Triggers include requests to \"open a website\", \"fill out a form\", \"click a button\", \"take a screenshot\", \"scrape data from a page\", \"test this web app\", \"login to a site\", \"automate browser actions\", or any task requiring programmatic web interaction."
+    },
+    {
+      "name": "cloud-schedule",
+      "description": "ReClaw/Zeroclaw-only: create, list, update, and delete scheduled tasks. Only works with the ReClaw (Zeroclaw) agent via messaging channels (Telegram, Slack, etc.). Does NOT work with Claude Code, Codex, Rebyte Code, or other coding agents — those should set schedules in the UI instead."
+    },
+    {
+      "name": "context-lake",
+      "description": "Access and manage structured data. Query your organization's connected databases, files, and services. Import your own CSV/Parquet/JSON files as queryable SQL tables. Build views that join across sources. All data is queryable via standard SQL."
+    },
+    {
+      "name": "data-analysis-workflow",
+      "description": "Gather, clean, analyze, and visualize data from the web or uploaded files. Use when user wants to scrape data, analyze datasets, create charts, find trends, compare metrics, build dashboards, or generate data-driven reports. Triggers include \"analyze data\", \"scrape and analyze\", \"create dashboard\", \"find trends\", \"compare metrics\", \"data visualization\", \"statistical analysis\", \"correlation analysis\", \"build chart\", \"data report\"."
+    },
+    {
+      "name": "data-scraper",
+      "description": "Scrape web pages using Scrapling with anti-bot bypass (like Cloudflare Turnstile), stealth headless browsing, spiders framework, adaptive scraping, and JavaScript rendering. Use when asked to scrape, crawl, or extract data from websites; web_fetch fails; the site has anti-bot protections; write Python code to scrape/crawl; or write spiders."
+    },
+    {
+      "name": "deep-research",
+      "description": "Conduct enterprise-grade research with multi-source synthesis, citation tracking, and verification. Use when user needs comprehensive analysis requiring 10+ sources, verified claims, or comparison of approaches. Triggers include \"deep research\", \"comprehensive analysis\", \"research report\", \"compare X vs Y\", or \"analyze trends\". Do NOT use for simple lookups, debugging, or questions answerable with 1-2 searches."
+    },
+    {
+      "name": "design",
+      "description": "Create and refine visual designs — logos, brand assets, UI mockups, illustrations, interactive artifacts — using AI image generation, design intelligence, and impeccable.style design skills for professional polish. Use when user wants to design a logo, create brand assets, build UI mockups, generate illustrations, or create and refine interactive visual artifacts."
+    },
+    {
+      "name": "docx",
+      "description": "Process, create, convert, and analyze documents — PDFs, Word docs, spreadsheets, and more. Use when user wants to extract data from PDFs, create Word documents, merge or split PDFs, convert between formats, analyze spreadsheet data, or process uploaded files. Triggers include \"extract from PDF\", \"create Word document\", \"merge PDFs\", \"convert document\", \"analyze spreadsheet\", \"OCR this scan\", \"extract tables\", \"create template\", \"process invoice\"."
+    },
+    {
+      "name": "dynamodb-database",
+      "description": "Provision DynamoDB NoSQL database for web apps. Use for key-value storage, document storage, high-performance NoSQL. Triggers include \"DynamoDB\", \"NoSQL\", \"key-value store\", \"document database\"."
+    },
+    {
+      "name": "echarts",
+      "description": "Create interactive charts and data visualizations using pyecharts (Python) and Apache ECharts. Use when user needs charts, graphs, or data visualizations rendered as HTML. Triggers include \"create chart\", \"make a graph\", \"visualize data\", \"bar chart\", \"line chart\", \"pie chart\", \"scatter plot\", \"heatmap\", \"data visualization\", \"plot this data\", \"chart this\". Do NOT use for static images or matplotlib-style charts."
+    },
+    {
+      "name": "embed-assets",
+      "description": "Embed images, audio, and other assets into a single HTML file using base64 data URIs. Use when building self-contained HTML widgets or pages that need inline media. Triggers include \"embed image\", \"embed audio\", \"inline asset\", \"base64 embed\", \"self-contained HTML\", \"single-file HTML with media\"."
+    },
+    {
+      "name": "financial-deep-research",
+      "description": "Conduct enterprise-grade financial research with multi-source synthesis, regulatory compliance tracking, and verified market analysis. Use when user needs comprehensive financial analysis requiring 10+ sources, verified claims, market comparisons, or investment research. Triggers include \"financial research\", \"market analysis\", \"investment analysis\", \"due diligence\", \"financial deep dive\", \"compare stocks/funds\", or \"analyze [company/sector]\". Do NOT use for simple stock quotes, basic company lookups, or questions answerable with 1-2 searches."
+    },
+    {
+      "name": "form-builder",
+      "description": "Build stylish, Typeform-like multi-step forms and surveys using the Rebyte Forms library (Composer API). Outputs standalone HTML files. Triggers include \"create a form\", \"build a survey\", \"make a questionnaire\", \"feedback form\", \"contact form\", \"signup form\", \"onboarding flow\", \"multi-step form\", \"typeform-style\", \"data collection form\". Do NOT use for simple single-field inputs or backend form processing."
+    },
+    {
+      "name": "form-workflow",
+      "description": "Build forms, surveys, quizzes, and registration pages with multi-step flows, conditional logic, and response collection. Use when user wants to create a form, survey, questionnaire, quiz, signup flow, feedback form, or registration page. Triggers include \"create form\", \"build survey\", \"make questionnaire\", \"registration form\", \"feedback form\", \"signup flow\", \"quiz\", \"typeform\", \"multi-step form\"."
+    },
+    {
+      "name": "google-workspace-workflow",
+      "description": "Google Workspace workflow for Drive, Docs, Sheets, Gmail, Calendar. Supports two modes - CLI (gws with service account or access token) and Browser (sync Google session via Browser Sync, then automate with Chrome DevTools MCP). Ask the user which method they prefer."
+    },
+    {
+      "name": "gws-best-practices",
+      "description": "Best practices for using the gws CLI with supported Google Workspace services (Drive, Docs, Sheets, Slides). Use when performing any operation with the gws CLI."
+    },
+    {
+      "name": "image-workflow",
+      "description": "Generate images from text descriptions or edit existing images using AI. Use when user wants to create logos, illustrations, product photos, social media graphics, concept art, or edit/transform uploaded images. Triggers include \"generate image\", \"create logo\", \"make illustration\", \"product photo\", \"social media graphic\", \"concept art\", \"edit image\", \"transform photo\", \"style transfer\", \"image to image\", \"remove background\"."
+    },
+    {
+      "name": "internet-search",
+      "description": "Search the internet for information. Use when you need to find current information, research topics, look up documentation, or verify facts. Triggers include \"search the web\", \"search internet\", \"look up\", \"find information\", \"google\", \"web search\", \"search for\"."
+    },
+    {
+      "name": "jimeng",
+      "description": "Generate images from text prompts using ByteDance Jimeng (Seedream) via Rebyte data API. High-quality image generation with up to 4K resolution. Triggers include \"generate image\", \"create image\", \"make a picture\", \"draw\", \"illustrate\", \"image of\", \"picture of\", \"jimeng\", \"seedream\", \"instant dream\"."
+    },
+    {
+      "name": "learn-anything",
+      "description": "Turn any material into interactive learning slides — codebases, documents, PDFs, earnings reports, research papers, articles, textbooks, URLs. Produces a self-contained HTML slide deck you can navigate like PowerPoint. Triggers include \"learn this\", \"explain this\", \"teach me\", \"turn this into slides\", \"make this understandable\", \"help me learn\", \"break this down\", \"study guide\"."
+    },
+    {
+      "name": "memory",
+      "description": "Persistent memory system. Save facts, search saved memories, and recall past task conversations with full prompt and result. Use at the start of every task to recall context, and at the end to save learnings."
+    },
+    {
+      "name": "nano-banana",
+      "description": "Generate images from text prompts or edit existing images using Google Nano Banana 2 (Gemini 3.1 Flash image generation) via Rebyte data API. Supports multi-size output (512px–4K), improved text rendering, and multi-image input. Use for text-to-image generation or image-to-image editing/enhancement. Triggers include \"generate image\", \"create image\", \"make a picture\", \"draw\", \"illustrate\", \"image of\", \"picture of\", \"edit image\", \"modify image\", \"enhance image\", \"style transfer\", \"nano banana\"."
+    },
+    {
+      "name": "nanoppt",
+      "description": "Generate stylized presentation slide images using Nano Banana AI. Converts article content to ASCII framework then generates AI images for each slide. Triggers include \"nanoppt\", \"stylized slides\", \"AI slide images\", \"presentation images\", \"Doraemon style slides\", \"anime presentation\". Do NOT use for regular presentations (use slide instead)."
+    },
+    {
+      "name": "pdf",
+      "description": "Use this skill whenever the user wants to do anything with PDF files. This includes creating professional PDF documents (reports, articles, white papers) with themed styling and CJK support, reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, filling PDF forms, encrypting/decrypting PDFs, extracting images, and OCR on scanned PDFs to make them searchable. If the user mentions a .pdf file, asks to produce one, wants a \"professionally formatted\" document, or says \"转PDF\" or \"生成报告\", use this skill."
+    },
+    {
+      "name": "podcast",
+      "description": "Research a topic and produce a podcast episode with AI-generated voices. Use when user wants to create a podcast, audio episode, narrated discussion, or audio content from a topic or document. Triggers include \"create a podcast\", \"make a podcast episode\", \"podcast about\", \"audio episode\", \"narrated discussion\", \"turn this into a podcast\"."
+    },
+    {
+      "name": "podcast-producer",
+      "description": "Broadcast-ready podcast audio production from a script. Use when user wants to turn a script, dialogue, or text into a finished podcast episode with professional audio quality. Triggers include \"produce this podcast\", \"generate podcast audio\", \"turn this script into a podcast\", \"create podcast episode from this script\", \"make this into an audio episode\"."
+    },
+    {
+      "name": "pptx",
+      "description": "Generate, edit, and read PowerPoint (.pptx) files. Create from scratch with PptxGenJS, edit existing PPTX via XML workflows, or extract text with markitdown. Triggers: PPT, PPTX, PowerPoint."
+    },
+    {
+      "name": "rebyte-app-builder",
+      "description": "Deploy web applications to Rebyte Cloud — a managed deployment platform (like Vercel). Supports Node.js SSR frameworks (auto-detect), static sites, Python, Go, and Rust backends. Deploys via `rebyte deploy` with zero configuration for Node.js, or via `rebyte.json` for other languages."
+    },
+    {
+      "name": "repo-hunter",
+      "description": ">"
+    },
+    {
+      "name": "report",
+      "description": "Create beautiful editorial reports as magazine-style HTML documents rendered inline in chat. Pretext-powered hero typography with text wrapping around decorations, multi-column body, pull quotes, stat callouts, and figures. Uses the widget aesthetic system. Triggers include \"create a report\", \"write a report\", \"format as a report\", \"magazine layout\", \"editorial report\", \"formatted analysis\", \"beautiful document\", \"publish-quality report\", \"research report\", \"analysis brief\"."
+    },
+    {
+      "name": "research-workflow",
+      "description": "Conduct comprehensive research and produce a professional research report as PDF. Use when user wants in-depth research on any topic — market analysis, technology comparisons, industry trends, academic topics, competitive intelligence, or any question requiring multi-source synthesis. Triggers include \"research\", \"investigate\", \"analyze\", \"write a report on\", \"deep dive into\", \"comprehensive analysis of\", \"what do we know about\"."
+    },
+    {
+      "name": "second-brain",
+      "description": "Workspace structure convention for Agent Computer. Establishes raw/ (user materials, read-only), content directories (AI-maintained), and output/ (deliverables). Use as a sub-skill in workflow skills that need structured file organization. Inspired by Karpathy's LLM Knowledge Base model."
+    },
+    {
+      "name": "show-me-how",
+      "description": "Create interactive HTML widgets, charts, dashboards, and visual explainers rendered inline in chat. Use when user needs interactive visualizations, data exploration tools, calculators, or visual explanations. Triggers include \"show me how\", \"visualize\", \"interactive chart\", \"make a widget\", \"show me how X works\", \"build a calculator\", \"create a dashboard\", \"interactive explainer\", \"explore this data\", \"chart this\", \"graph\", \"plot\"."
+    },
+    {
+      "name": "similarweb-analytics",
+      "description": "Analyze websites and domains using SimilarWeb traffic data. Get traffic metrics, engagement stats, global rankings, traffic sources, and geographic distribution for comprehensive website research."
+    },
+    {
+      "name": "skill-creator",
+      "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy."
+    },
+    {
+      "name": "skill-installer",
+      "description": "Search and install open-source skills from community GitHub repositories. Use when users ask to find, discover, or install skills/plugins for specific tasks, domains, or workflows."
+    },
+    {
+      "name": "skill-manager",
+      "description": "Manage your team skills — list your skills, view metadata and version history, read version content for comparison, download specific versions, and publish new versions. Use when you need to understand why a skill changed, compare versions, or publish an update."
+    },
+    {
+      "name": "slide",
+      "description": "Create presentation slide decks as a single HTML file with the widget aesthetic system. All slides live in one document as sections, sharing one theme. Rendered as a widget in chat. Optionally deploy as a standalone URL. No build tools or frameworks required. Triggers include \"create slides\", \"make a presentation\", \"build a deck\", \"HTML slides\", \"slide deck\", \"quick presentation\"."
+    },
+    {
+      "name": "slide-builder",
+      "description": "Create presentations using Slidev (Markdown-based slides). Triggers include \"create presentation\", \"make slides\", \"build slides\", \"slide deck\", \"tech talk\", \"conference slides\", \"pitch deck\". Handles the full workflow from content planning to deployment at rebyte.pro."
+    },
+    {
+      "name": "slide-workflow",
+      "description": "The slides app at /code/slides/. Create, iterate, and publish HTML decks. Each {slug}/ folder is a deck, the code agent is the app's runtime user. Visual magic over code editing."
+    },
+    {
+      "name": "speech-to-text",
+      "description": "Transcribe audio to text using OpenAI Whisper. Use when user wants to convert speech to text, transcribe audio files, generate subtitles, or extract text from recordings. Triggers include \"speech to text\", \"STT\", \"transcribe\", \"transcription\", \"subtitles\", \"captions\", \"audio to text\", \"convert audio to text\"."
+    },
+    {
+      "name": "sqlite-database",
+      "description": "Provision cloud SQLite databases for web apps. Use when an app needs a database, persistent storage, or backend data. Triggers include \"add a database\", \"need storage\", \"store data\", \"save to database\", \"SQLite\", \"database\"."
+    },
+    {
+      "name": "stock-analysis",
+      "description": "Comprehensive stock and company analysis with real market data. Covers price history, technical analysis, company research, news sentiment, SEC filings, insider trading, and multi-stock comparison. Use when user mentions stock tickers, asks about stock prices, company analysis, investment research, or financial data. Triggers: stock symbol (AAPL, TSLA), 'stock price', 'analyze stock', 'compare stocks', 'company financials', 'insider trading', 'SEC filing', 'is X a good buy', 'stock chart', 'price history'. Do NOT use for full-blown multi-source research reports (use financial-deep-research instead)."
+    },
+    {
+      "name": "super-extract",
+      "description": "Extract structured entities from unstructured text with character-level source grounding and interactive visualization. Supports NER, relation extraction, and information extraction with exact position mapping and highlighted widget output. Handles PDFs, DOCX, and plain text."
+    },
+    {
+      "name": "team-skill-workflow",
+      "description": "Create and publish a custom skill for your team. Use when user wants to create a team skill, build a private skill, make a skill for the organization, or publish a skill to the team store. Triggers include \"create a team skill\", \"build a skill for my team\", \"make a custom skill\", \"create and publish a skill\", \"new team skill\"."
+    },
+    {
+      "name": "text-to-speech",
+      "description": "Convert text to speech audio using OpenAI TTS. Use when user wants to generate voiceovers, narration, audio files from text, or add voice to videos. Triggers include \"text to speech\", \"TTS\", \"voiceover\", \"narration\", \"generate audio\", \"speak this text\", \"convert to audio\", \"voice generation\"."
+    },
+    {
+      "name": "video-generator",
+      "description": "Professional AI video production workflow. Use when creating videos, short films, commercials, or any video content using AI generation tools."
+    },
+    {
+      "name": "wiki-workflow",
+      "description": "Build and maintain a personal LLM-native wiki — a structured, interlinked collection of markdown notes that grows over time. Use when the user wants to build a knowledge base, second brain, personal wiki, or notes system; or asks to \"ingest\" a document/article/URL, \"ask my notes a question\", \"look up what I know about X\", or \"tidy up my wiki\". Inspired by Karpathy's LLM Wiki pattern and disksing/db9-wiki, adapted for the persistent local filesystem in Agent Computer VMs."
+    },
+    {
+      "name": "xlsx",
+      "description": "Open, create, read, analyze, edit, or validate Excel/spreadsheet files (.xlsx, .xlsm, .csv, .tsv). Use when the user asks to create, build, modify, analyze, read, validate, or format any Excel spreadsheet, financial model, pivot table, or tabular data file. Triggers on 'spreadsheet', 'Excel', '.xlsx', '.csv', 'pivot table', 'financial model', 'formula', or any request to produce tabular data in Excel format."
+    },
+    {
+      "name": "youtube",
+      "description": "Access YouTube data - channels, videos, search, and transcripts. Use when user needs YouTube channel info, video listings, search results, or video transcripts. Triggers include \"youtube\", \"youtube channel\", \"youtube video\", \"video transcript\", \"youtube search\", \"channel videos\", \"latest videos from\"."
+    }
+  ]
+}
