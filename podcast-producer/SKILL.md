@@ -13,7 +13,7 @@ Turn a ready script into a finished podcast episode that meets broadcast audio s
 
 Every audio decision serves clarity and listener comfort. Voices must be distinct, pacing must feel natural, loudness must be consistent, and transitions must be smooth. Production quality is not decoration — it's the difference between "AI-generated audio" and "a podcast."
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ---
 

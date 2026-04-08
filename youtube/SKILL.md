@@ -7,7 +7,7 @@ description: Access YouTube data - channels, videos, search, and transcripts. Us
 
 Access YouTube channel data, videos, search, and transcripts.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## Data Proxy Operations
 

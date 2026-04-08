@@ -7,9 +7,8 @@ description: Create presentations using Slidev (Markdown-based slides). Triggers
 
 Create Markdown presentations with Slidev. Deploy to rebyte.pro.
 
-{{include:non-technical-user.md}}
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 **Directory structure:**
 - `SKILL_DIR`: The directory containing this SKILL.md (scripts, references, etc.)

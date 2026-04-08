@@ -16,7 +16,7 @@ Skills have a lifecycle: **create → publish → install → manage**. This ski
 
 The typical flow: use **skill-creator** to build and package → **skill-manager** to publish → **skill-installer** for other team members to install.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## Operations
 

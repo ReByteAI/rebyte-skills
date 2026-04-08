@@ -7,7 +7,7 @@ description: Transcribe audio to text using OpenAI Whisper. Use when user wants 
 
 Transcribe audio to text using OpenAI Whisper API.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## When to Use
 

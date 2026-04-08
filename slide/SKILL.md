@@ -11,9 +11,8 @@ Create presentations as pure HTML. No build tools, no frameworks — just HTML, 
 
 **Deploy is optional.** Only deploy to rebyte.pro when the user explicitly asks for a shareable URL. See `references/deploy.md`.
 
-{{include:non-technical-user.md}}
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 **Directory structure:**
 - `SKILL_DIR`: The directory containing this SKILL.md

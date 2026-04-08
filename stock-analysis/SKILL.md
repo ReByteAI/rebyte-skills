@@ -7,7 +7,7 @@ description: "Comprehensive stock and company analysis with real market data. Co
 
 Comprehensive stock and company analysis using real-time market data and SEC filings.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## Data Sources
 

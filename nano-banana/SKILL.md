@@ -13,7 +13,7 @@ Generate images from text prompts or edit existing images using Google Nano Bana
 - Multi-image input for editing and style transfer
 - Multiple aspect ratios (1:1, 16:9, 9:16, etc.)
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## Text-to-Image Generation
 

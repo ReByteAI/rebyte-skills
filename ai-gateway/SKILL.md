@@ -7,7 +7,7 @@ description: Add AI/LLM capabilities to deployed applications. Provision an API 
 
 Provision an AI Gateway API key to access LLM APIs (OpenAI, Anthropic, Google) through an OpenAI-compatible interface.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## When to Use This Skill
 

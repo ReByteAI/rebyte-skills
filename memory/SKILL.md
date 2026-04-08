@@ -12,7 +12,7 @@ You have two kinds of memory:
 
 Both are scoped to the current user.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## How to Use Memory
 

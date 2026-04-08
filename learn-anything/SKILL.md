@@ -9,9 +9,8 @@ Turn any material into a navigable slide deck. Codebases, PDFs, research papers,
 
 **How it works:** Read the material, identify 5-10 core concepts, then generate a self-contained HTML slide deck. Each slide teaches one concept. The output is a single HTML file — grid of cards, click to expand into full-screen slides, arrow keys to navigate. Like PowerPoint but in the browser.
 
-{{include:non-technical-user.md}}
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## Pipeline
 

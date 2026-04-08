@@ -7,7 +7,7 @@ description: Provision DynamoDB NoSQL database for web apps. Use for key-value s
 
 Provision DynamoDB NoSQL database access for your apps.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## When to Use
 

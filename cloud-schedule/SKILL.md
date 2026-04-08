@@ -11,7 +11,7 @@ Schedule prompts to run automatically and deliver results to a messaging channel
 
 **Limits:** Maximum 3 active schedules per workspace.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## When to Use
 

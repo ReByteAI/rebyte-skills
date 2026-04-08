@@ -7,7 +7,7 @@ description: Generate stylized presentation slide images using Nano Banana AI. C
 
 Generate stylized presentation images using Nano Banana (Google Gemini) image generation.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ---
 

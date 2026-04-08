@@ -7,7 +7,7 @@ description: Search the internet for information. Use when you need to find curr
 
 Search the web and get structured results (titles, URLs, snippets).
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## Step 1: Get Current Time
 

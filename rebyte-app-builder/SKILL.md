@@ -7,7 +7,6 @@ description: Deploy web applications to Rebyte Cloud — a managed deployment pl
 
 Deploy web applications with zero configuration. No API keys, no cloud accounts, no setup.
 
-{{include:non-technical-user.md}}
 
 ## What Are You Deploying?
 

@@ -7,7 +7,6 @@ description: Build stylish, Typeform-like multi-step forms and surveys using the
 
 Build production-ready, Typeform-style forms using the Composer API.
 
-{{include:non-technical-user.md}}
 
 ## ⚠️ CRITICAL: Completion Requirements
 
@@ -19,7 +18,7 @@ Build production-ready, Typeform-style forms using the Composer API.
 
 **NEVER tell the user the form is "done" without completing ALL steps.**
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## Boilerplate Template
 

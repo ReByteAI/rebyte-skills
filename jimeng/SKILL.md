@@ -7,7 +7,7 @@ description: Generate images from text prompts using ByteDance Jimeng (Seedream)
 
 Generate images from text prompts using ByteDance Jimeng (Seedream 4.5), a high-quality image generation model.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## Text-to-Image Generation
 

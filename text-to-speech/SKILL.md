@@ -7,7 +7,7 @@ description: Convert text to speech audio using OpenAI TTS. Use when user wants 
 
 Convert text to high-quality speech audio using OpenAI TTS API.
 
-{{include:auth.md}}
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
 ## When to Use
 
