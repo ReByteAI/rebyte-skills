@@ -333,29 +333,38 @@ These attributes are **data-only** -- they do NOT affect styling or layout. Neve
 
 ## Images
 
-Two sources, no exceptions:
+Every image is embedded via the **public CDN**. No local files, no relative paths.
 
-- **Generate** with the `image-workflow` skill (uses `nano-banana` / Gemini 3.1 Flash image gen). Aspect ratio matches the slide layout (`16:9` for full-bleed, `4:3` or `1:1` for two-col cards). `imageSize: "1K"` for normal, `2K` for hero/title.
-- **Reuse** something already in `/code/raw/` (user-provided).
+**Two sources, no exceptions:**
 
-**Path:** `/code/slides/{slug}/assets/{descriptive-name}.png`
-**Reference:** `<img src="assets/{descriptive-name}.png" alt="..." />`
+- **Generate** with the `image-workflow` skill (uses `nano-banana`). Aspect ratio matches the slide layout (`16:9` for full-bleed, `4:3` or `1:1` for two-col cards). `imageSize: "512"` for normal slides, `"1K"` for hero/full-bleed only. Then upload:
+  ```bash
+  PUBLIC_URL=$(bash ~/.skills/rebyteai-image-workflow/scripts/upload-public.sh /tmp/img.png "{slug}" "{name}")
+  ```
+- **Reuse** something from `/code/raw/`. Upload the same way via the script above.
 
-**DON'T:**
-- Hotlink external URLs in `<img src>` — Unsplash, Pexels, Imgur, picsum, placeholder.com, ANY `https://`. They hallucinate (you cannot remember real photo IDs from memory), they 404, they get blocked by referer checks, they fail under `file://`. Real failure: 2026-04-07.
-- Embed base64 inline — bloats the HTML, slows the editor
-- Use a placeholder `src` and "fill in later" — the next agent won't know to fill it in
-- Skip explicit container dimensions — broken images collapse the layout into a one-pixel sliver
-
-**Container dimensions are mandatory.** Wrap every `<img>` in a div with `aspect-ratio` or `min-height` so the slot is reserved if the image fails to render:
+**Embed template** (the `<img crossorigin="anonymous">` attribute is mandatory — the chip preview canvas pipeline depends on it):
 
 ```html
-<div style="aspect-ratio:16/10; background:var(--widget-bg-secondary); border-radius:var(--widget-border-radius); overflow:hidden;">
-  <img src="assets/foo.png" alt="..." style="width:100%; height:100%; object-fit:cover;" />
+<div data-bp-id="img-6-wrap" style="aspect-ratio:16/10; background:var(--widget-bg-secondary); border-radius:var(--widget-border-radius); overflow:hidden;">
+  <img data-bp-id="img-6" crossorigin="anonymous"
+       src="https://api.rebyte.ai/api/public/artifacts/{workspaceId}/{filename}.png"
+       alt="..." style="width:100%; height:100%; object-fit:cover;" />
 </div>
 ```
 
-The DOM Lint Pass below catches external URLs (`reason:external-url`) and overflow as a deterministic safety net.
+**DON'T:**
+- Hotlink external URLs in `<img src>` — Unsplash, Pexels, Imgur, picsum, placeholder.com, any `https://` host that isn't our public CDN. They hallucinate (you cannot remember real photo IDs from memory), they 404, they get blocked by referer checks. Only `${API_URL}/api/public/artifacts/...` URLs are allowed. The DOM Lint Pass enforces this.
+- Save under `/code/slides/{slug}/assets/`. That directory is gone. The CDN URL is the only reference.
+- Use a relative `<img src="assets/foo.png">`. Relative URLs resolve against `about:srcdoc` in the slide editor preview iframe and 404 on every image.
+- Embed base64 inline — bloats the HTML, slows the editor
+- Use a placeholder `src` and "fill in later" — the next agent won't know to fill it in
+- Skip explicit container dimensions — broken images collapse the layout into a one-pixel sliver
+- Omit `crossorigin="anonymous"` on `<img>` tags — the chip preview canvas will throw SecurityError and produce a blank chip
+
+**Container dimensions are mandatory.** Wrap every `<img>` in a div with `aspect-ratio` or `min-height` so the slot is reserved if the image fails to render — use the embed template above.
+
+The DOM Lint Pass below catches non-CDN external URLs (`reason:external-url`), relative paths (`reason:relative-src`), missing crossorigin (`reason:missing-crossorigin`), and overflow as a deterministic safety net.
 
 ## Quality Gates
 
@@ -416,11 +425,21 @@ agent-browser open "file:///code/slides/{slug}/index.html" \
           const overflow = Math.max(r.top - c.top, c.bottom - r.bottom, r.left - c.left, c.right - r.right);
           if (overflow > 1) issues.push({ tag: el.tagName, bp: el.dataset.bpId || null, overflowPx: Math.round(overflow) });
         }
-        // External image URL check — hotlinks are forbidden (see Images section)
+        // Image URL check — only our public CDN is allowed.
+        // Anchored to known relay hosts so https://evil.com/api/public/artifacts/... is NOT accepted.
+        const CDN_PATTERN = /^https?:\/\/(api\.rebyte\.ai|api\.eng0\.ai|localhost:\d+)\/api\/public\/artifacts\//;
         for (const img of slide.querySelectorAll('img')) {
           const src = img.getAttribute('src') || '';
-          if (/^https?:/.test(src)) {
+          if (/^https?:/.test(src) && !CDN_PATTERN.test(src)) {
             issues.push({ tag: 'IMG', bp: img.dataset.bpId || null, badSrc: src.slice(0, 60), reason: 'external-url' });
+          }
+          // Relative paths are also forbidden — they resolve against about:srcdoc in the editor preview iframe and 404
+          if (src && !/^https?:/.test(src) && !src.startsWith('data:')) {
+            issues.push({ tag: 'IMG', bp: img.dataset.bpId || null, badSrc: src.slice(0, 60), reason: 'relative-src' });
+          }
+          // CDN URLs need crossorigin="anonymous" — chip preview canvas depends on it
+          if (CDN_PATTERN.test(src) && img.getAttribute('crossorigin') !== 'anonymous') {
+            issues.push({ tag: 'IMG', bp: img.dataset.bpId || null, badSrc: src.slice(0, 60), reason: 'missing-crossorigin' });
           }
         }
         report.push({ page: parseInt(slide.dataset.page, 10) || (i + 1), ok: issues.length === 0, issues: issues.slice(0, 5) });

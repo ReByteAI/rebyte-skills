@@ -107,6 +107,23 @@ Note any limitations:
 - Exact geometric layouts work better as HTML/CSS than as generated images
 - Generated images include SynthID watermarking (invisible, detectable)
 
+### Step 5b: Upload to public CDN (for in-app embedding)
+
+When the calling skill needs to embed the image in HTML (slide deck, report, dashboard), upload the image to the public artifact CDN and embed the returned URL.
+
+```bash
+# After nano-banana returns base64 → decode to file
+echo "$BASE64" | base64 -d > /tmp/img.png
+
+# Upload and get the public CDN URL
+PUBLIC_URL=$(bash ~/.skills/rebyteai-image-workflow/scripts/upload-public.sh /tmp/img.png "{slug}" "{descriptive-name}")
+
+# Embed in HTML — crossorigin is mandatory for the slide chip-preview canvas
+# <img crossorigin="anonymous" src="$PUBLIC_URL" alt="..." />
+```
+
+The script appends a 6-char content hash to the filename, so the 1-year immutable CDN cache is always correct. See `scripts/upload-public.sh` for details.
+
 ## Decision Points
 
 - **"What imageSize?"** — `512` or `1K` for exploration and iteration (fast). `2K` or `4K` for final delivery (high quality). Always start small.

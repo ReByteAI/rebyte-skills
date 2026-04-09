@@ -20,14 +20,13 @@ When choosing between behaviors, **prefer the visual layer**. The user's mental 
 
 ## Sub-skills
 
-- `rebyteai/second-brain` — workspace contract (`raw/`, content dirs, `output/`, `INDEX.md`)
 - `rebyteai/slide` — HTML generation rules, aesthetics, data attributes, **Images**, **DOM Lint Pass**
 - `rebyteai/image-workflow` — image generation via `nano-banana` (Gemini 3.1 Flash image gen)
 
 ## Pre-flight (required)
 
 ```bash
-ls ~/.skills/rebyteai-slide/SKILL.md ~/.skills/rebyteai-second-brain/SKILL.md 2>/dev/null
+ls ~/.skills/rebyteai-slide/SKILL.md 2>/dev/null
 ```
 
 Missing? Use `skill-installer` to install by slug. Don't proceed without `slide`.
@@ -103,15 +102,21 @@ The old `slide-page-{N}-{uuid}.png` chip filename convention is removed (no more
 
 ## Images
 
-Two sources, no exceptions:
+Every image is embedded via the **public CDN**. No `/code/slides/{slug}/assets/` directory, no relative paths.
 
-- **Generate** with `image-workflow` (uses `nano-banana` / Gemini 3.1 Flash image gen). Aspect ratio matches the slide layout (`16:9` for full-bleed, `4:3` or `1:1` for two-col cards). `imageSize: "1K"` for normal slides, `2K` for hero/title.
-- **Reuse** something already in `/code/raw/` (user-provided).
+**Two sources, no exceptions:**
 
-**Path:** `/code/slides/{slug}/assets/{descriptive-name}.png`
-**Reference:** `<img src="assets/{descriptive-name}.png" alt="..." />`
+- **Generate** with `image-workflow` (uses `nano-banana`). Then upload via `upload-public.sh`:
+  ```bash
+  PUBLIC_URL=$(bash ~/.skills/rebyteai-image-workflow/scripts/upload-public.sh /tmp/img.png "{slug}" "{name}")
+  ```
+- **Reuse** something from `/code/raw/`. Upload the same way via the script above.
 
-The full Images rules + container-dimensions template + DOM lint check live in the slide skill SKILL.md "Images" section. The short version: **never hotlink external URLs, always wrap `<img>` in a div with `aspect-ratio` so broken images don't collapse the layout**.
+**Embed:** `<img crossorigin="anonymous" src="$PUBLIC_URL" alt="..." />` — wrapped in the `aspect-ratio` div (template in slide skill SKILL.md).
+
+Container-dimensions template + DOM lint check live in the slide skill SKILL.md. Upload script lives in `image-workflow/scripts/upload-public.sh`. **Don't duplicate either.**
+
+**DON'T:** Hotlink Unsplash / Pexels / Imgur / picsum / placeholder.com / any other external host. Only `${API_URL}/api/public/artifacts/...` URLs are allowed. The DOM Lint Pass enforces this.
 
 ## After every change
 
@@ -155,5 +160,4 @@ Record published URLs in `/code/output/`.
 ## Reference
 
 - `rebyteai/slide` SKILL.md — HTML generation, aesthetics, design DON'Ts, Images, DOM Lint Pass
-- `rebyteai/second-brain` SKILL.md — workspace contract details (raw/, INDEX.md, INGEST/QUERY patterns)
-- `rebyteai/image-workflow` SKILL.md — image generation specifics
+- `rebyteai/image-workflow` SKILL.md — image generation + CDN upload script
