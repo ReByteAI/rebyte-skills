@@ -31,6 +31,63 @@ Every deck must satisfy this. Full details + validation script: `references/prot
 
 ---
 
+## Style Service — HTML Mode (MANDATORY)
+
+Every HTML deck's aesthetic comes from the **live style service**. There is no hardcoded list of aesthetics in this skill — styles are discovered at task time. Each style package ships concrete tokens, worked snippets, signature moves, don'ts, and a full reference deck.
+
+**Do not list aesthetics from memory.** Always fetch the live list and present those options to the user. If memory contradicts the service, the service is correct.
+
+### 1. Fetch the style list (once, at task start)
+
+```bash
+RELAY_URL="${REBYTE_RELAY_URL:-https://api.rebyte.ai}"
+curl -sf "$RELAY_URL/api/styles" -o /tmp/styles.json
+jq '.styles.slide' /tmp/styles.json
+```
+
+Each entry: `{ id, name, summary, signals, version, bundle_url }`.
+
+### 2. Recommend a style by matching signals
+
+Compare the user's prompt against each style's `signals` array. The style with the most overlapping signals is the recommendation. If there's a tie, pick the first one. If **no** signals match any style, don't guess — ask the user to choose explicitly.
+
+### 3. Confirm with the user — always show the LIVE list
+
+During Step 2 Q2 (Style) below, present only the styles returned by `/api/styles`. Do **not** add, remove, or rename entries. Show each style's `name` and `summary` verbatim; mark the recommendation with `(Recommended)`.
+
+### 4. Download the selected style
+
+```bash
+STYLE_ID=<user-picked id>
+BUNDLE_URL=$(jq -r --arg id "$STYLE_ID" '.styles.slide[] | select(.id==$id) | .bundle_url' /tmp/styles.json)
+mkdir -p ~/.slide-styles
+curl -sfL "$BUNDLE_URL" -o /tmp/style.zip
+unzip -q -o /tmp/style.zip -d ~/.slide-styles/
+ls ~/.slide-styles/$STYLE_ID/   # manifest.json, snippets/, reference/
+```
+
+Extracted layout is used as the design guideline in Step 7 (HTML generation). Full usage: `html/html-slides.md`.
+
+### 5. Record the style in the generated deck
+
+Every `deck.html` MUST include this meta tag in `<head>` — it tells follow-up edits which style to keep the deck consistent with:
+
+```html
+<meta name="rebyte-style" content="<STYLE_ID>@<VERSION>">
+```
+
+### Failure modes
+
+- **Service unreachable** (relay down, network error): stop. Tell the user the slide service is unreachable and ask whether to retry or switch to Image mode. Do NOT silently generate from memory.
+- **No styles returned** (empty list): same — tell the user and stop.
+- **Agent's memory conflicts with the service**: trust the service. Discard any remembered aesthetic names.
+
+### Edit / follow-up workflow
+
+If the deck already exists and declares `<meta name="rebyte-style" content="<id>@<version>">`, keep using that same style id for edits — no need to fetch or ask again. If the existing deck has **no** such meta tag, it's a legacy deck: keep its existing `data-aesthetic`/`data-font` attributes as-is and edit only the content.
+
+---
+
 ## Workflow — New Deck
 
 Copy this checklist and check off items as you complete them:
@@ -40,7 +97,9 @@ Slide Deck Progress:
 - [ ] Step 1: Setup & Analyze
   - [ ] 1.1 Analyze content
   - [ ] 1.2 Check existing
-- [ ] Step 2: Confirmation (4-6 questions)
+  - [ ] 1.3 Fetch /api/styles (HTML mode) — see Style Service section
+- [ ] Step 2: Confirmation (4-6 questions — Q2 style list comes from fetched /api/styles for HTML)
+- [ ] Step 2.5: Download selected style bundle (HTML mode)
 - [ ] Step 3: Generate outline
 - [ ] Step 4: Review outline (conditional)
 - [ ] Step 5: Generate prompts (IMAGE MODE ONLY)
@@ -71,7 +130,9 @@ Slide Deck Progress:
 | 3000-5000 words | 15-25 |
 | > 5000 words | 20-30 |
 
-3. Analyze content signals for style recommendation (see Auto Style Selection tables below)
+3. Analyze content signals for style recommendation:
+   - **HTML mode**: match the prompt against signals from `/api/styles` (see Style Service section above). Do this fetch now so the picked style is ready by Step 2.
+   - **Image mode**: use the Auto Style Selection tables below (preset mapping).
 
 **1.2 Check Existing Content**
 
@@ -115,22 +176,24 @@ options:
 #### Q2: Style
 
 **If HTML selected:**
+
+Present the styles returned by `/api/styles` (fetched in Step 1). Build the options list from `jq '.styles.slide'` output — one option per style, label = `name` (or `id`), description = `summary`. Mark the top signal-match as `(Recommended)`.
+
+Example (generated from live data, not hardcoded — your concrete list will differ):
 ```
 header: "Style"
-question: "Which aesthetic?"
+question: "Which style?"
 options:
-  - label: "editorial"
-    description: "Serif, generous whitespace, earth tones + gold"
-  - label: "blueprint"
-    description: "Technical drawing, slate/blue palette"
-  - label: "paper-ink"
-    description: "Warm cream, terracotta/sage"
-  - label: "warm"
-    description: "Peach/cream, friendly"
-  - label: "mono-terminal"
-    description: "Green/amber on dark, CRT feel"
+  - label: "<name of best-match style> (Recommended)"
+    description: "<its summary from /api/styles>"
+  - label: "<name of next style>"
+    description: "<its summary>"
+  # ... one entry per style returned by the service
 ```
-Full aesthetic list: `html/html-slides.md`
+
+If the service returned zero styles or is unreachable, follow the failure-mode guidance in the Style Service section — do not invent options.
+
+After the user picks, immediately download the selected style bundle (see Style Service section, step 4).
 
 **If Image selected:**
 ```

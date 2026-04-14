@@ -2,60 +2,39 @@
 
 How to generate rich HTML slides. Called from Step 7 of the main workflow in `../SKILL.md` when render mode = HTML.
 
-For protocol, editing, and workflow: see `../SKILL.md`. This file covers only HTML-specific generation: aesthetics, fonts, CSS variables, slide types, design rules, images, quality gates, and DOM Lint.
+**By the time this file is consulted, the selected style bundle has already been downloaded** to `~/.slide-styles/<id>/` by the Style Service protocol in `../SKILL.md`. This file covers only HTML-specific generation: how to use the downloaded style, slide types, design rules, images, quality gates, and DOM Lint.
 
 For shared CSS engine and nav JS: `../references/css-patterns.md`. For base HTML template: `../references/slide-template.md`. For nano-banana image generation: `../references/nano-banana.md`.
 
 ---
 
-## Aesthetic Direction (MANDATORY)
+## Using the downloaded style
 
-Pick ONE aesthetic. Set `data-aesthetic="name"` on `<html>`. The frontend resolves to actual colors — **never hardcode hex colors**.
+The style bundle at `~/.slide-styles/<id>/` is the complete design guideline for this deck. Read every field before writing any HTML.
 
-| Aesthetic | Feel | Best for | NEVER combine with |
-|-----------|------|----------|--------------------|
-| `editorial` | Serif, generous whitespace, earth tones + gold | Keynotes, narratives | Bright colors, card grids, tech iconography |
-| `blueprint` | Technical drawing, slate/blue palette | Architecture, system talks | Warm tones, soft edges, decorative elements |
-| `paper-ink` | Warm cream, terracotta/sage | Tutorials, creative pitches | Neon accents, dark backgrounds, gradients |
-| `mono-terminal` | Green/amber on dark, CRT feel | Technical demos | Serif fonts, pastel colors, rounded cards |
-| `data-dense` | Tight spacing, maximum information | Data presentations | Decorative elements, animations, vague labels |
-| `warm` | Peach/cream, friendly | General purpose | Cold blues, harsh shadows, sterile grids |
-| `dracula` | Purple-heavy, Dracula IDE scheme | Developer talks | Warm earth tones, serif body text |
-| `nord` | Cool arctic blues, minimalist | Clean, minimal decks | Warm accents, ornamental fonts, dense layouts |
+### Contents of the bundle
 
-**Constrained aesthetics** (editorial, blueprint, paper-ink, mono-terminal) produce more distinctive results.
+- `manifest.json` — **the design contract**. Read `tokens`, `type_scale`, `fonts`, `chrome`, `signature_moves`, `donts` fully.
+- `snippets/*.html` — worked examples of common archetypes (cover, agenda, stat-hero, etc.) in this style. Self-contained `<style>` + `<section>`. Treat as **reference patterns** (copy the idiom), not literal templates to fill.
+- `reference/deck.html` — the canonical complete deck in this style. When in doubt about how an archetype should feel, read this.
 
-## Font Pairing (MANDATORY)
+### How to generate the deck
 
-Pick ONE font pair. Set `data-font="name"` on `<html>`.
+- Use the exact colors from `manifest.tokens` as your `:root` CSS var values.
+- Use the font family from `manifest.fonts.primary.family` — include `manifest.fonts.google_fonts_url` as a `<link>` in `<head>`.
+- Apply the `type_scale` sizes directly (don't reinvent sizes).
+- Apply the `signature_moves` exactly. The deck must look like the style — not a generic sans deck that happens to use the right colors.
+- Honor `manifest.donts` strictly.
+- For each slide, pick an archetype from `manifest.archetypes` whose slots match the content; copy the idiom from the matching snippet; rewrite text + image URLs; renumber `data-page` and `data-bp-id` suffixes.
+- If you write a slide that isn't in the archetype list, still follow the tokens, type scale, and signature moves — don't drift.
 
-| Name | Body font | Code font | Voice |
-|------|-----------|-----------|-------|
-| `dm-sans` | DM Sans | Fira Code | Clean, modern |
-| `instrument-serif` | Instrument Serif | JetBrains Mono | Literary, editorial |
-| `ibm-plex` | IBM Plex Sans | IBM Plex Mono | Technical, precise |
-| `bricolage` | Bricolage Grotesque | Fragment Mono | Bold, contemporary |
-| `jakarta` | Plus Jakarta Sans | Azeret Mono | Friendly, rounded |
-| `outfit` | Outfit | Space Mono | Geometric, clean |
-| `sora` | Sora | IBM Plex Mono | Modern, geometric |
-| `crimson-pro` | Crimson Pro | Noto Sans Mono | Classic serif |
-| `fraunces` | Fraunces | Source Code Pro | Warm, ornamental |
-| `red-hat` | Red Hat Display | Red Hat Mono | Distinctive |
-| `libre-franklin` | Libre Franklin | Inconsolata | Neutral, versatile |
-| `playfair` | Playfair Display | Roboto Mono | Elegant, high-contrast |
+The `<meta name="rebyte-style">` tag and Style Service failure modes are defined in `../SKILL.md` — that's the protocol level. This file is just the per-deck usage.
 
-**Recommended pairings:**
-- editorial → `instrument-serif`, `crimson-pro`, `playfair`, `fraunces`
-- blueprint → `ibm-plex`, `dm-sans`, `sora`
-- paper-ink → `crimson-pro`, `fraunces`, `libre-franklin`
-- mono-terminal → `ibm-plex`
-- data-dense → `ibm-plex`, `dm-sans`, `libre-franklin`
-
-**NEVER use Inter, Roboto, or Arial.**
+---
 
 ## CSS Variable Contract
 
-Always use these. NEVER hardcode colors.
+These are the framework-level CSS variables that `references/css-patterns.md` and `references/slide-template.md` expect to find in `:root`. **Populate them from the style's manifest** (manifest.tokens + manifest.fonts) when assembling `deck.html`. Never hardcode hex colors in slide markup; always go through these vars.
 
 | Variable | Purpose |
 |----------|---------|
@@ -86,8 +65,11 @@ The entire presentation is one HTML file containing all slides as `<section>` el
 Save the HTML to `/code/slides/{slug}/index.html`.
 
 ```html
-<html data-aesthetic="editorial" data-font="instrument-serif" data-slides="true">
-  <head>...</head>
+<html data-rebyte-style="sport-bold" data-slides="true">
+  <head>
+    <meta name="rebyte-style" content="sport-bold@0.1.0">
+    ...
+  </head>
   <body>
     <div class="deck" id="deck">
       <section class="slide slide--title" data-page="1">...</section>
@@ -99,22 +81,34 @@ Save the HTML to `/code/slides/{slug}/index.html`.
 </html>
 ```
 
+The `<meta name="rebyte-style">` tag is REQUIRED. It's how follow-up edits identify which style to keep the deck consistent with.
+
 **Save as a file**, not as a widget code block in chat. The frontend reads the file from the VM.
 
 ### HTML Architecture
 
-One HTML document, one theme, all slides as sections. See `../references/css-patterns.md` for the complete CSS, navigation JS, and layout classes. See `../references/slide-template.md` for the base template.
+One HTML document, one style, all slides as sections. See `../references/css-patterns.md` for the slide engine CSS, navigation JS, and layout classes. See `../references/slide-template.md` for the base template.
 
 ```html
 <!DOCTYPE html>
-<html lang="en" data-aesthetic="editorial" data-font="instrument-serif" data-slides="true">
+<html lang="en" data-rebyte-style="sport-bold" data-slides="true">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=...&display=swap" rel="stylesheet">
+  <meta name="rebyte-style" content="sport-bold@0.1.0">
+  <!-- Google Fonts URL comes from manifest.fonts.google_fonts_url -->
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { /* Fallback CSS vars matching chosen aesthetic */ }
+    :root {
+      /* --widget-* vars populated from manifest.tokens + manifest.fonts */
+      --widget-bg-primary: #ffffff;       /* from manifest.tokens.paper */
+      --widget-text-primary: #191919;     /* from manifest.tokens.ink */
+      --widget-accent: #fa632a;           /* from manifest.tokens.accent */
+      --widget-font-sans: "Sora", system-ui, sans-serif;
+      --widget-font-mono: "JetBrains Mono", monospace;
+    }
     /* Slide engine + layout classes from css-patterns.md */
+    /* Then per-archetype CSS, adapted from manifest.snippets[*] */
   </style>
 </head>
 <body tabindex="0">
@@ -148,13 +142,14 @@ One HTML document, one theme, all slides as sections. See `../references/css-pat
 ```
 
 **CRITICAL rules:**
-1. Include `<link>` for Google Fonts (needed for standalone rendering)
-2. Set fallback CSS vars in `:root` matching your chosen aesthetic
-3. Design for **1920x1080** internal canvas (16:9)
-4. Include `tabindex="0"` on `<body>` for keyboard focus in iframe
-5. Copy the navigation engine JS verbatim from `../references/css-patterns.md`
-6. Every `<section>` MUST have `data-page="N"` (1-indexed sequential)
-7. Every editable element MUST have `data-bp-id` (unique within the deck)
+1. Include `<meta name="rebyte-style" content="<id>@<version>">` so follow-up edits can identify the style
+2. Include `<link>` for Google Fonts using `manifest.fonts.google_fonts_url` (exact URL from the style package)
+3. Populate `:root` CSS vars from `manifest.tokens` + `manifest.fonts` — the framework CSS in `../references/css-patterns.md` depends on these being set
+4. Design for **1920x1080** internal canvas (16:9)
+5. Include `tabindex="0"` on `<body>` for keyboard focus in iframe
+6. Copy the navigation engine JS verbatim from `../references/css-patterns.md`
+7. Every `<section>` MUST have `data-page="N"` (1-indexed sequential)
+8. Every editable element MUST have `data-bp-id` (unique within the deck)
 
 ### Navigation (built into JS engine)
 
@@ -323,7 +318,7 @@ Every image is embedded via the **public CDN**. No local files, no relative path
 
 **Two sources, no exceptions:**
 
-- **Generate** with the `image-workflow` skill (uses `nano-banana`). Aspect ratio matches the slide layout (`16:9` for full-bleed, `4:3` or `1:1` for two-col cards). `imageSize: "512"` for normal slides, `"1K"` for hero/full-bleed only. Then upload:
+- **Generate**  Aspect ratio matches the slide layout (`16:9` for full-bleed, `4:3` or `1:1` for two-col cards). `imageSize: "512"` for normal slides, `"1K"` for hero/full-bleed only. Then upload:
   ```bash
   PUBLIC_URL=$(bash ~/.skills/rebyteai-image-workflow/scripts/upload-public.sh /tmp/img.png "{slug}" "{name}")
   ```
