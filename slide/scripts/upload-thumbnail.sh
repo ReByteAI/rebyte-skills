@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Upload 01.png as the deck thumbnail with a deterministic filename.
-# Filename is slide-thumb-{slug}.webp — no hash, so regenerating the same
-# slug overwrites the previous thumbnail.
+# Upload 01.png as the deck thumbnail.
+# Filename is slide-thumb-{slug}-{timestamp}.webp — timestamp is a unix
+# epoch so every upload gets a unique URL (plays well with the immutable
+# CDN cache). Client lists files by prefix "slide-thumb-{slug}-" and picks
+# the most recent to find the latest thumbnail for a deck.
 #
 # Usage: upload-thumbnail.sh <path-to-01.png> <slug>
 #
@@ -28,7 +30,8 @@ Image.open('$PNG_FILE').save('$WEBP_FILE', 'WEBP', quality=80)
 "
 fi
 
-FNAME="slide-thumb-${SLUG}.webp"
+TIMESTAMP=$(date -u +%s)
+FNAME="slide-thumb-${SLUG}-${TIMESTAMP}.webp"
 
 RESP=$(curl -sf -X POST "$API_URL/api/artifacts/upload-url" \
   -H "Authorization: Bearer $AUTH_TOKEN" \
