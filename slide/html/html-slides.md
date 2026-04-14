@@ -320,7 +320,7 @@ Every image is embedded via the **public CDN**. No local files, no relative path
 
 - **Generate**  Aspect ratio matches the slide layout (`16:9` for full-bleed, `4:3` or `1:1` for two-col cards). `imageSize: "512"` for normal slides, `"1K"` for hero/full-bleed only. Then upload:
   ```bash
-  PUBLIC_URL=$(bash ~/.skills/rebyteai-image-workflow/scripts/upload-public.sh /tmp/img.png "{slug}" "{name}")
+  PUBLIC_URL=$(bash ~/.skills/rebyteai-slide/scripts/upload-public.sh /tmp/img.png "{slug}" "{name}")
   ```
 - **Reuse** something from `/code/raw/`. Upload the same way via the script above.
 

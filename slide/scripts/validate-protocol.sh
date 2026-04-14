@@ -103,20 +103,11 @@ if [ ! -f "$SLIDES_DIR/.slide" ]; then
 fi
 
 # --- Thumbnail upload: first page as deck thumbnail, runs only if all checks pass ---
-# Uses the shared upload-public.sh helper (image-workflow skill). AUTH_TOKEN and
-# API_URL must be set in the environment; workspace ID is derived from auth.
+# Uses upload-public.sh next to this script. AUTH_TOKEN and API_URL must be set.
 THUMBNAIL_URL=""
 if [ ${#ERRORS[@]} -eq 0 ]; then
-  THUMB_SCRIPT="$HOME/.skills/rebyteai-image-workflow/scripts/upload-public.sh"
-  FIRST_PNG="$DECK_DIR/01.png"
-  if [ ! -f "$THUMB_SCRIPT" ]; then
-    WARNINGS+=("Thumbnail upload skipped: $THUMB_SCRIPT not installed")
-  else
-    THUMBNAIL_URL=$(bash "$THUMB_SCRIPT" "$FIRST_PNG" "slide-thumb" "$SLUG") || {
-      WARNINGS+=("Thumbnail upload failed")
-      THUMBNAIL_URL=""
-    }
-  fi
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  THUMBNAIL_URL=$(bash "$SCRIPT_DIR/upload-public.sh" "$DECK_DIR/01.png" "slide-thumb" "$SLUG")
 fi
 
 # --- Report ---
