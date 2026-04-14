@@ -102,6 +102,23 @@ if [ ! -f "$SLIDES_DIR/.slide" ]; then
   ERRORS+=(".slide marker file missing in $SLIDES_DIR/")
 fi
 
+# --- Thumbnail upload: first page as deck thumbnail, runs only if all checks pass ---
+# Uses the shared upload-public.sh helper (image-workflow skill). AUTH_TOKEN and
+# API_URL must be set in the environment; workspace ID is derived from auth.
+THUMBNAIL_URL=""
+if [ ${#ERRORS[@]} -eq 0 ]; then
+  THUMB_SCRIPT="$HOME/.skills/rebyteai-image-workflow/scripts/upload-public.sh"
+  FIRST_PNG="$DECK_DIR/01.png"
+  if [ ! -f "$THUMB_SCRIPT" ]; then
+    WARNINGS+=("Thumbnail upload skipped: $THUMB_SCRIPT not installed")
+  else
+    THUMBNAIL_URL=$(bash "$THUMB_SCRIPT" "$FIRST_PNG" "slide-thumb" "$SLUG") || {
+      WARNINGS+=("Thumbnail upload failed")
+      THUMBNAIL_URL=""
+    }
+  fi
+fi
+
 # --- Report ---
 OK=true
 [ ${#ERRORS[@]} -gt 0 ] && OK=false
@@ -115,8 +132,8 @@ if [ ${#WARNINGS[@]} -gt 0 ]; then
   WARN_JSON=$(printf '%s\n' "${WARNINGS[@]}" | jq -R . | jq -s .)
 fi
 
-printf '{"deck":"%s","sections":%d,"pngs":%d,"ok":%s,"errors":%s,"warnings":%s}\n' \
-  "$SLUG" "$SECTION_COUNT" "${#FOUND_PNGS[@]}" "$OK" "$ERR_JSON" "$WARN_JSON"
+printf '{"deck":"%s","sections":%d,"pngs":%d,"ok":%s,"thumbnail_url":"%s","errors":%s,"warnings":%s}\n' \
+  "$SLUG" "$SECTION_COUNT" "${#FOUND_PNGS[@]}" "$OK" "$THUMBNAIL_URL" "$ERR_JSON" "$WARN_JSON"
 
 if [ "$OK" = false ]; then
   exit 1
