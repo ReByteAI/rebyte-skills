@@ -103,11 +103,13 @@ if [ ! -f "$SLIDES_DIR/.slide" ]; then
 fi
 
 # --- Thumbnail upload: first page as deck thumbnail, runs only if all checks pass ---
-# Uses upload-public.sh next to this script. AUTH_TOKEN and API_URL must be set.
+# Uses upload-thumbnail.sh next to this script. Filename is deterministic per
+# slug (slide-thumb-{slug}.webp) so overwrites always reach the same URL.
+# AUTH_TOKEN and API_URL must be set.
 THUMBNAIL_URL=""
 if [ ${#ERRORS[@]} -eq 0 ]; then
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  THUMBNAIL_URL=$(bash "$SCRIPT_DIR/upload-public.sh" "$DECK_DIR/01.png" "slide-thumb" "$SLUG")
+  THUMBNAIL_URL=$(bash "$SCRIPT_DIR/upload-thumbnail.sh" "$DECK_DIR/01.png" "$SLUG")
 fi
 
 # --- Report ---
