@@ -40,6 +40,15 @@ agent-browser set viewport 1920 1080
 agent-browser eval "document.fonts && document.fonts.ready" >/dev/null 2>&1 || true
 agent-browser wait --fn "document.fonts ? document.fonts.status === 'loaded' : true" >/dev/null 2>&1 || true
 
+# Kill CSS transitions + animations so screenshots capture final state,
+# not a fade-in mid-frame. Also force stacking: only the active slide
+# paints. This injected <style> tag stays for the duration of the export.
+agent-browser eval "(() => {
+  let t = document.getElementById('__export_override');
+  if (!t) { t = document.createElement('style'); t.id = '__export_override'; document.head.appendChild(t); }
+  t.textContent = '*,*::before,*::after{transition:none!important;animation-duration:0s!important;animation-delay:0s!important;animation-iteration-count:1!important}section[data-page]:not(.slide--active){display:none!important}';
+})()" >/dev/null
+
 TOTAL=$(agent-browser eval "document.querySelectorAll('section[data-page]').length")
 
 echo "Exporting ${TOTAL} pages to ${OUT_DIR}/"
@@ -54,11 +63,20 @@ for (( i=0; i<TOTAL; i++ )); do
   PADDED=$(printf '%02d' "$PAGE_NUM")
 
   # Activate this slide, deactivate all others, hide chrome.
+  # Inline display:none on non-active slides belts + braces the CSS
+  # rule injected above — survives any deck CSS that overrides it.
   agent-browser eval "(() => {
     const slides = document.querySelectorAll('section[data-page]');
-    slides.forEach(s => s.classList.remove('slide--active','slide--prev','slide--next'));
-    slides[${i}].classList.add('slide--active');
-    slides[${i}].scrollIntoView({block:'start',inline:'start'});
+    slides.forEach((s, idx) => {
+      s.classList.remove('slide--active','slide--prev','slide--next');
+      if (idx === ${i}) {
+        s.style.removeProperty('display');
+        s.classList.add('slide--active');
+        s.scrollIntoView({block:'start',inline:'start'});
+      } else {
+        s.style.setProperty('display','none','important');
+      }
+    });
     document.querySelector('.slide-controls')?.style.setProperty('display','none');
     document.querySelector('.slide-progress')?.style.setProperty('display','none');
   })()" >/dev/null
