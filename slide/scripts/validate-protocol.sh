@@ -102,17 +102,10 @@ if [ ! -f "$SLIDES_DIR/.slide" ]; then
   ERRORS+=(".slide marker file missing in $SLIDES_DIR/")
 fi
 
-# --- Thumbnail upload: first page as deck thumbnail, runs only if all checks pass ---
-# Uses upload-thumbnail.sh next to this script. Filename is deterministic per
-# slug (slide-thumb-{slug}.webp) so overwrites always reach the same URL.
-# AUTH_TOKEN and API_URL must be set.
-THUMBNAIL_URL=""
-if [ ${#ERRORS[@]} -eq 0 ]; then
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  THUMBNAIL_URL=$(bash "$SCRIPT_DIR/upload-thumbnail.sh" "$DECK_DIR/01.png" "$SLUG")
-fi
-
 # --- Report ---
+# The relay mirrors /code/slides/{slug}/*.png to a private per-task GCS prefix
+# after every prompt. Clients fetch signed URLs via the task-artifacts API.
+# No thumbnail upload happens here anymore.
 OK=true
 [ ${#ERRORS[@]} -gt 0 ] && OK=false
 
@@ -125,8 +118,8 @@ if [ ${#WARNINGS[@]} -gt 0 ]; then
   WARN_JSON=$(printf '%s\n' "${WARNINGS[@]}" | jq -R . | jq -s .)
 fi
 
-printf '{"deck":"%s","sections":%d,"pngs":%d,"ok":%s,"thumbnail_url":"%s","errors":%s,"warnings":%s}\n' \
-  "$SLUG" "$SECTION_COUNT" "${#FOUND_PNGS[@]}" "$OK" "$THUMBNAIL_URL" "$ERR_JSON" "$WARN_JSON"
+printf '{"deck":"%s","sections":%d,"pngs":%d,"ok":%s,"errors":%s,"warnings":%s}\n' \
+  "$SLUG" "$SECTION_COUNT" "${#FOUND_PNGS[@]}" "$OK" "$ERR_JSON" "$WARN_JSON"
 
 if [ "$OK" = false ]; then
   exit 1
