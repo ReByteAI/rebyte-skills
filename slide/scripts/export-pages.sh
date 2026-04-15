@@ -1,26 +1,37 @@
 #!/usr/bin/env bash
-# Export each slide page as a high-resolution PNG.
+# Export each slide page as a high-resolution PNG, following the slide
+# skill protocol (see references/protocol.md).
+#
 # Usage: bash export-pages.sh /code/slides/{slug}/index.html
 #
-# Readiness contract per slide:
-#   1. Mark it .slide--active, hide nav chrome
-#   2. Poll a readiness probe — active slide has size, images decoded,
-#      canvases have dimensions. Bounded by AGENT_BROWSER_DEFAULT_TIMEOUT.
-#   3. If readiness still false, click the slide to kick interaction-gated
-#      animations / IntersectionObserver / lazy renderers. Poll again.
-#   4. Screenshot.
+# Protocol rules this script enforces:
+#   1. PROGRESSIVE DISPLAY — capture first-screen state only. Never click,
+#      tap, or simulate input on a slide's content; progressive/click-to-
+#      reveal slides must be screenshotted as they initially appear.
+#   2. TIMEOUTS — 30 seconds per slide is the budget. Total run aborts if
+#      N slides exceed N × 30s wall-clock time.
+#   3. EXECUTION — iterate `<section data-page="1..N">` in exact
+#      data-page order, one screenshot per section, written as NN.png.
 #
-# This replaces a fixed 300ms sleep that was losing every race on heavy
-# slides (images, charts, web fonts). Agents were then retrying
-# export-pages.sh 20+ times per deck. Now the wait is real and bounded.
+# Implementation notes:
+#   - CSS transitions + animations are disabled globally via an injected
+#     <style> tag so captures never catch a mid-fade frame.
+#   - Non-active slides are forced display:none so stacking/overlap is
+#     impossible (belt + braces on top of the protocol's slide--active).
+#   - Readiness probe checks decoded images, non-zero canvases, and a
+#     non-empty active-slide bounding box. Bounded by per-slide budget.
+#   - If readiness times out, screenshot is taken anyway. A too-early
+#     capture is better than no capture — size + visual validation in
+#     CI will flag broken frames.
 set -euo pipefail
 
 HTML_FILE="${1:?Usage: export-pages.sh <path-to-index.html>}"
 OUT_DIR="$(dirname "$HTML_FILE")"
 
 export AGENT_BROWSER_AUTO_CONNECT=1
-# Per-action wait cap. `wait --fn` uses this as its polling timeout.
-export AGENT_BROWSER_DEFAULT_TIMEOUT="${AGENT_BROWSER_DEFAULT_TIMEOUT:-8000}"
+# Per-agent-browser-call wait cap. Each slide's readiness poll caps here.
+# 30s matches the protocol per-slide budget.
+export AGENT_BROWSER_DEFAULT_TIMEOUT="${AGENT_BROWSER_DEFAULT_TIMEOUT:-30000}"
 
 # Ensure Chrome is running
 if ! pgrep -f chromium > /dev/null 2>&1 && ! pgrep -f chrome > /dev/null 2>&1; then
@@ -33,16 +44,13 @@ if ! pgrep -f chromium > /dev/null 2>&1 && ! pgrep -f chrome > /dev/null 2>&1; t
   sleep 2
 fi
 
-# Open the deck, let network settle, force fonts to load once.
 agent-browser open "file://${HTML_FILE}"
 agent-browser wait --load networkidle || agent-browser wait --load load
 agent-browser set viewport 1920 1080
-agent-browser eval "document.fonts && document.fonts.ready" >/dev/null 2>&1 || true
 agent-browser wait --fn "document.fonts ? document.fonts.status === 'loaded' : true" >/dev/null 2>&1 || true
 
-# Kill CSS transitions + animations so screenshots capture final state,
-# not a fade-in mid-frame. Also force stacking: only the active slide
-# paints. This injected <style> tag stays for the duration of the export.
+# Kill transitions + animations and force non-active slides hidden for
+# the duration of the export. Survives any deck CSS via !important.
 agent-browser eval "(() => {
   let t = document.getElementById('__export_override');
   if (!t) { t = document.createElement('style'); t.id = '__export_override'; document.head.appendChild(t); }
@@ -50,49 +58,53 @@ agent-browser eval "(() => {
 })()" >/dev/null
 
 TOTAL=$(agent-browser eval "document.querySelectorAll('section[data-page]').length")
-
 echo "Exporting ${TOTAL} pages to ${OUT_DIR}/"
 
-# Readiness probe — runs in the browser. Returns true when the currently
-# active slide looks fully painted: images decoded, deck container has
-# real size, canvases have dimensions.
+# Protocol budget: 30s per slide. Shell-side deadline check aborts the
+# whole run if we blow through the total — prevents runaway on a broken
+# deck. Intended as an upper bound, not a typical-case timer.
+PER_SLIDE_BUDGET=30
+TOTAL_BUDGET=$(( TOTAL * PER_SLIDE_BUDGET ))
+START=$(date +%s)
+
 READY_FN='(() => { const a=document.querySelector("section.slide--active"); if(!a) return false; const imgs=[...a.querySelectorAll("img")]; if(!imgs.every(i=>i.complete && i.naturalWidth>0)) return false; const cs=[...a.querySelectorAll("canvas")]; if(!cs.every(c=>c.width>0 && c.height>0)) return false; const r=a.getBoundingClientRect(); return r.width>100 && r.height>100; })()'
 
-for (( i=0; i<TOTAL; i++ )); do
-  PAGE_NUM=$((i + 1))
-  PADDED=$(printf '%02d' "$PAGE_NUM")
+for (( i=1; i<=TOTAL; i++ )); do
+  NOW=$(date +%s)
+  ELAPSED=$(( NOW - START ))
+  if [ "$ELAPSED" -gt "$TOTAL_BUDGET" ]; then
+    echo "Error: total budget ${TOTAL_BUDGET}s exceeded at page ${i} — aborting" >&2
+    exit 2
+  fi
 
-  # Activate this slide, deactivate all others, hide chrome.
-  # Inline display:none on non-active slides belts + braces the CSS
-  # rule injected above — survives any deck CSS that overrides it.
+  PADDED=$(printf '%02d' "$i")
+
+  # Select by data-page value, not DOM index — protocol contract.
+  # No click / no input simulation: progressive-display slides are
+  # captured at first-screen state per Rule 1.
   agent-browser eval "(() => {
-    const slides = document.querySelectorAll('section[data-page]');
-    slides.forEach((s, idx) => {
+    const all = document.querySelectorAll('section[data-page]');
+    all.forEach(s => {
       s.classList.remove('slide--active','slide--prev','slide--next');
-      if (idx === ${i}) {
-        s.style.removeProperty('display');
-        s.classList.add('slide--active');
-        s.scrollIntoView({block:'start',inline:'start'});
-      } else {
-        s.style.setProperty('display','none','important');
-      }
+      s.style.setProperty('display','none','important');
     });
+    const target = document.querySelector('section[data-page=\"${i}\"]');
+    if (target) {
+      target.style.removeProperty('display');
+      target.classList.add('slide--active');
+      target.scrollIntoView({block:'start',inline:'start'});
+    }
     document.querySelector('.slide-controls')?.style.setProperty('display','none');
     document.querySelector('.slide-progress')?.style.setProperty('display','none');
   })()" >/dev/null
 
-  # First pass: bounded poll for readiness.
-  if ! agent-browser wait --fn "$READY_FN" >/dev/null 2>&1; then
-    # Kick interaction-gated renderers (animations paused until user
-    # interaction, IntersectionObserver hold-until-touched, etc.) and
-    # poll again with a fresh budget.
-    agent-browser click "section.slide--active" >/dev/null 2>&1 || true
-    agent-browser wait --fn "$READY_FN" >/dev/null 2>&1 || \
-      echo "  warn: ${PADDED}.png readiness timeout — capturing anyway" >&2
-  fi
+  # Bounded readiness poll. On timeout: capture whatever's painted and
+  # warn — do NOT click or otherwise touch the slide (Rule 1).
+  agent-browser wait --fn "$READY_FN" >/dev/null 2>&1 || \
+    echo "  warn: ${PADDED}.png readiness timeout — capturing first-screen state" >&2
 
   agent-browser screenshot ".deck" "${OUT_DIR}/${PADDED}.png"
   echo "  ${PADDED}.png"
 done
 
-echo "Done. ${TOTAL} pages exported to ${OUT_DIR}/"
+echo "Done. ${TOTAL} pages exported to ${OUT_DIR}/ (elapsed $(( $(date +%s) - START ))s, budget ${TOTAL_BUDGET}s)"
