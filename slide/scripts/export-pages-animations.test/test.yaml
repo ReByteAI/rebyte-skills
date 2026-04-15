@@ -1,0 +1,76 @@
+name: export-pages — heavy CSS animations
+
+# Every element on every slide uses a 2-second entrance animation
+# (fade, slide-up, scale). Without the animation-killing style
+# injection, screenshots would fire while text is still translated or
+# faded — captures would show content at partial opacity or offset
+# from final position.
+#
+# Script injects a global rule that forces animation-duration: 0s and
+# iteration-count: 1 on everything so animations snap to their end
+# state immediately. This test verifies that override works.
+
+fixture:
+  src: ./fixture
+  dst: /code/slides/test-animations
+
+script:
+  src: ../export-pages.sh
+  dst: /home/user/.skills/slide/scripts/export-pages.sh
+
+run: bash /home/user/.skills/slide/scripts/export-pages.sh $FIXTURE/index.html
+timeoutMs: 180000
+
+collect:
+  - remote: /code/slides/test-animations/*.png
+    local: ./out
+
+pages:
+  - name: 01.png
+    description: |
+      Warm peach/salmon background. Huge red serif-sans title "Motion
+      Heavy Cover" where the word "Heavy" is in italic blue. Below
+      the title, a paragraph of dark-brown body text explaining that
+      elements fade and slide in over 2s and the export must capture
+      final state. Red square page-number badge "1" top-right.
+      CRITICAL: all text must appear at full opacity and at its final
+      position — no half-transparent text, no text that's visibly
+      offset from where it should rest. If any element looks
+      translucent or shifted, that's a mid-animation capture defect.
+
+  - name: 02.png
+    description: |
+      Warm peach/salmon background. Huge red title at top reading
+      "Three Pillars" where "Pillars" is in italic blue. Below,
+      three white cards in a row, each with a colored top stripe
+      (red, blue, green left-to-right). Each card has a bold heading
+      — "Reliability" (red), "Fidelity" (blue), "Determinism"
+      (green) — followed by a short paragraph of body text.
+      CRITICAL: all three cards must be visible at full opacity and
+      in their final grid positions. No card should appear faded,
+      partly off-screen, or sized smaller than its neighbors.
+
+  - name: 03.png
+    description: |
+      Warm peach/salmon background. Center of the slide shows a huge
+      red numeric display reading "2s" (roughly 240 points). Below
+      the number, a medium-weight dark label reading "animation
+      duration — must be overridden". Red "3" page-number badge
+      top-right.
+      CRITICAL: the "2s" number must be fully rendered at full
+      opacity. The label below must be at its final horizontal
+      position. If the number looks scaled down, or the label is
+      shifted left/right from centered, it means the animation was
+      captured mid-flight.
+
+expect:
+  exitCode: 0
+  files:
+    - name: 01.png
+      imageMinDim: [1800, 1000]
+    - name: 02.png
+      imageMinDim: [1800, 1000]
+    - name: 03.png
+      imageMinDim: [1800, 1000]
+  uniquePngHashes: true
+  minScore: 8       # stricter — animations must be fully resolved

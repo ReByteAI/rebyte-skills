@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="rebyte-style" content="test-delayed@1.0.0" />
+  <title>Delayed Loading Test Deck</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --ink: #f5f3f0;
+      --accent: #ff6b35;
+      --accent-2: #4ecdc4;
+      --card: #16213e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: var(--bg); color: var(--ink); font-family: "Inter", system-ui, sans-serif; }
+    .deck { position: relative; width: 1920px; height: 1080px; }
+    section.slide {
+      position: absolute; inset: 0; padding: 96px;
+      display: none;
+      flex-direction: column; justify-content: center; gap: 48px;
+    }
+    section.slide.slide--active { display: flex; }
+
+    .hero-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+    }
+    .hero-grid .card {
+      background: var(--card); border-radius: 24px; overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,.4);
+      aspect-ratio: 4/3;
+      display: flex; flex-direction: column;
+    }
+    .hero-grid .card img {
+      width: 100%; height: 60%; object-fit: cover; display: block;
+    }
+    .hero-grid .card .caption {
+      padding: 24px; font-size: 28px; font-weight: 700; color: var(--ink);
+    }
+    .hero-grid .card .caption .sub {
+      display: block; font-size: 18px; font-weight: 400;
+      color: var(--accent-2); margin-top: 8px;
+    }
+
+    h1 { font-size: 96px; font-weight: 900; letter-spacing: -2px; }
+    h1 em { font-style: italic; color: var(--accent); }
+    p.lead { font-size: 32px; font-weight: 400; opacity: 0.75; max-width: 1400px; }
+
+    .single-hero {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+    }
+    .single-hero img {
+      width: 100%; height: 720px; object-fit: cover; border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.4);
+    }
+    .single-hero .copy h2 { font-size: 72px; font-weight: 800; line-height: 1.05; color: var(--accent); }
+    .single-hero .copy p { font-size: 28px; margin-top: 32px; opacity: 0.85; line-height: 1.5; }
+
+    .pageno {
+      position: absolute; top: 48px; right: 48px;
+      background: var(--accent); color: var(--bg);
+      width: 56px; height: 56px; border-radius: 10px;
+      display: grid; place-items: center;
+      font-size: 28px; font-weight: 900;
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+
+    <section class="slide slide--active" data-page="1">
+      <span class="pageno">1</span>
+      <h1 data-bp-id="cover">Delayed <em>Assets</em><br/>Stress Test</h1>
+      <p class="lead" data-bp-id="lead">Three slides below depend on images that load ~2 seconds after page parse. A correct export script must wait for each slide's images before screenshotting.</p>
+    </section>
+
+    <section class="slide" data-page="2">
+      <span class="pageno">2</span>
+      <h1><em>Three</em> Delayed Heroes</h1>
+      <div class="hero-grid">
+        <div class="card">
+          <img data-delayed-src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800" alt="Circuit board" crossorigin="anonymous" />
+          <div class="caption">Infrastructure<span class="sub">core stack</span></div>
+        </div>
+        <div class="card">
+          <img data-delayed-src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800" alt="Network cables" crossorigin="anonymous" />
+          <div class="caption">Network<span class="sub">edge topology</span></div>
+        </div>
+        <div class="card">
+          <img data-delayed-src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800" alt="Data flow" crossorigin="anonymous" />
+          <div class="caption">Data Flow<span class="sub">streaming</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-page="3">
+      <span class="pageno">3</span>
+      <div class="single-hero">
+        <img data-delayed-src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=1200" alt="Developer workstation" crossorigin="anonymous" />
+        <div class="copy">
+          <h2>One Big <em>Hero</em></h2>
+          <p data-bp-id="hero-body">A single full-bleed image paired with a caption block. The image loads on a delay to simulate slow CDN. The export must wait for this image to finish decoding before screenshotting.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Simulate slow asset loading: move every [data-delayed-src] into its
+    // real src only after a ~2s delay. Without an image-readiness wait,
+    // the screenshotter would fire before any image finishes loading,
+    // capturing empty card areas / blank hero panel.
+    //
+    // NOTE: different delay per image so we cover the case where pages
+    // have a mix of fast and slow assets.
+    const imgs = document.querySelectorAll('img[data-delayed-src]');
+    imgs.forEach((img, idx) => {
+      const delay = 1500 + (idx * 300); // 1500ms .. 2400ms
+      setTimeout(() => {
+        img.src = img.dataset.delayedSrc;
+      }, delay);
+    });
+  </script>
+</body>
+</html>

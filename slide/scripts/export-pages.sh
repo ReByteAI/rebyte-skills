@@ -33,16 +33,35 @@ export AGENT_BROWSER_AUTO_CONNECT=1
 # 30s matches the protocol per-slide budget.
 export AGENT_BROWSER_DEFAULT_TIMEOUT="${AGENT_BROWSER_DEFAULT_TIMEOUT:-30000}"
 
-# Ensure Chrome is running
-if ! pgrep -f chromium > /dev/null 2>&1 && ! pgrep -f chrome > /dev/null 2>&1; then
+# Ensure Chrome is listening on 9222. Don't trust pgrep — a Chrome
+# process can exist without the remote-debugging port being open
+# (crashed, different flags, different port). The only reliable test is
+# a request to /json/version. If nothing answers, launch Chrome and
+# poll until it does.
+probe_cdp() { curl -sf -m 1 http://localhost:9222/json/version >/dev/null 2>&1; }
+
+if ! probe_cdp; then
   CHROME_BIN=$(command -v chromium || command -v google-chrome || command -v google-chrome-stable || echo "")
   if [ -z "$CHROME_BIN" ]; then
-    echo "Error: no Chrome/Chromium found" >&2
+    echo "Error: no Chrome/Chromium binary found on PATH" >&2
     exit 1
   fi
-  "$CHROME_BIN" --remote-debugging-port=9222 --headless --no-sandbox --disable-gpu &
-  sleep 2
+  "$CHROME_BIN" --remote-debugging-port=9222 --headless --no-sandbox --disable-gpu --disable-dev-shm-usage >/dev/null 2>&1 &
+  # Poll up to 30s for the DevTools endpoint to answer. Cold-boot VMs
+  # can take noticeably longer than warm ones (fonts, GPU init, etc.).
+  for _ in $(seq 1 60); do
+    probe_cdp && break
+    sleep 0.5
+  done
+  if ! probe_cdp; then
+    echo "Error: Chrome launched but /json/version on 9222 never responded" >&2
+    exit 1
+  fi
 fi
+
+# Connect agent-browser to the live CDP. AGENT_BROWSER_AUTO_CONNECT
+# alone can fail after VM resume (daemon lost its session).
+agent-browser connect 9222 >/dev/null 2>&1 || true
 
 agent-browser open "file://${HTML_FILE}"
 agent-browser wait --load networkidle || agent-browser wait --load load

@@ -1,0 +1,72 @@
+name: export-pages — delayed asset loading
+
+# Tests the readiness probe: slides 2 and 3 reference images whose src
+# attribute is injected via setTimeout (1.5s–2.4s). Without a real
+# image-decode wait, the screenshot fires before any image finishes
+# and we get empty card slots / blank hero. A correct implementation
+# waits for `img.complete && img.naturalWidth > 0` on every image in
+# the active slide.
+
+fixture:
+  src: ./fixture
+  dst: /code/slides/test-delayed
+
+script:
+  src: ../export-pages.sh
+  dst: /home/user/.skills/slide/scripts/export-pages.sh
+
+run: bash /home/user/.skills/slide/scripts/export-pages.sh $FIXTURE/index.html
+timeoutMs: 180000
+
+collect:
+  - remote: /code/slides/test-delayed/*.png
+    local: ./out
+
+pages:
+  - name: 01.png
+    description: |
+      Cover slide on a very dark navy/charcoal background. Large white
+      title "Delayed Assets Stress Test" where the word "Assets" is in
+      italic orange (or distinct accent color). Below the title, a
+      lighter-weight paragraph describing that three slides depend on
+      images loading ~2 seconds after page parse. Small orange square
+      page-number badge "1" top-right. No images on this slide.
+
+  - name: 02.png
+    description: |
+      Dark navy/charcoal background. Heading reads "Three Delayed
+      Heroes" with "Three" in italic orange. Below, THREE CARDS in a
+      horizontal row. Each card must show a photograph at the top
+      half occupying ~60% of the card height, and a caption block at
+      the bottom half with a label and a smaller sub-label in teal.
+      Cards should read (left to right): "Infrastructure / core stack",
+      "Network / edge topology", "Data Flow / streaming".
+      CRITICAL: each card's photo area MUST show an actual image.
+      Any card that shows an empty dark area, a blank colored
+      rectangle, or a broken-image icon where a photo should be is a
+      defect — it means the screenshot fired before images finished
+      loading. Orange "2" badge top-right.
+
+  - name: 03.png
+    description: |
+      Dark navy/charcoal background split into two halves. LEFT half
+      shows ONE large photograph (roughly 1:1.5 portrait-ish
+      rectangle) with rounded corners and a soft shadow. RIGHT half
+      shows a heading "One Big Hero" where "Hero" is in italic
+      orange, followed by a paragraph of descriptive text below the
+      heading in off-white. Orange "3" badge top-right.
+      CRITICAL: the left-half image area MUST contain an actual
+      photograph. An empty dark rectangle in that slot is a defect
+      caused by the screenshot firing before the image decoded.
+
+expect:
+  exitCode: 0
+  files:
+    - name: 01.png
+      imageMinDim: [1800, 1000]
+    - name: 02.png
+      imageMinDim: [1800, 1000]
+    - name: 03.png
+      imageMinDim: [1800, 1000]
+  uniquePngHashes: true
+  minScore: 7

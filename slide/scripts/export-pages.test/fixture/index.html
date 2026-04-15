@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" data-aesthetic="bright-collage" data-font="primary">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920,height=1080">
+<meta name="rebyte-style" content="bright-collage@0.1.0">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* CSS from patterns */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: #111;
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+body { display: flex; align-items: center; justify-content: center; }
+
+.deck {
+  position: relative;
+  width: 1920px; height: 1080px;
+  transform-origin: center center;
+  overflow: hidden;
+  background: #fef7c8; /* Warm pale-yellow paper bg */
+}
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #1a1a1a;
+  background: #fef7c8;
+  opacity: 0; pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Transitions */
+.deck[data-transition="slide"] .slide,
+.deck:not([data-transition]) .slide {
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.55s ease;
+  transform: translateX(100%);
+}
+.deck[data-transition="slide"] .slide--active,
+.deck:not([data-transition]) .slide--active {
+  opacity: 1; pointer-events: auto; transform: translateX(0);
+}
+.deck[data-transition="slide"] .slide--prev,
+.deck:not([data-transition]) .slide--prev {
+  transform: translateX(-100%);
+}
+
+.slide-controls {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(26,26,46,0.85); backdrop-filter: blur(12px);
+  border-radius: 32px; padding: 8px 20px;
+  z-index: 100; opacity: 0; transition: opacity 0.3s;
+  user-select: none;
+}
+body:hover .slide-controls { opacity: 1; }
+
+.ctrl-btn {
+  background: none; border: none; color: rgba(255,255,255,0.8);
+  cursor: pointer; width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: background 0.15s;
+}
+.ctrl-btn:hover { background: rgba(255,255,255,0.15); }
+.ctrl-btn:disabled { opacity: 0.3; cursor: default; }
+
+.slide-counter {
+  color: rgba(255,255,255,0.6); font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  min-width: 50px; text-align: center;
+}
+
+.slide-progress {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: #e85b46;
+  transition: width 0.4s ease; z-index: 101;
+}
+
+/* Base styles for bright-collage */
+.bright-collage-cover {
+  position: absolute; inset: 0;
+  background: #fef7c8; color: #1a1a1a;
+  font-family: "DM Sans", system-ui, sans-serif;
+  overflow: hidden;
+}
+.bright-collage-cover .blocks {
+  position: absolute; inset: 0;
+}
+.bright-collage-cover .yellow-bar {
+  position: absolute;
+  right: 220px; top: 600px;
+  width: 90px; height: 240px;
+  background: #f5d23a; border: 2.5px solid #1a1a1a;
+  z-index: 1;
+}
+.bright-collage-cover .green-tab {
+  position: absolute;
+  left: 350px; top: 360px;
+  width: 90px; height: 90px;
+  background: #4baf6b; border: 2.5px solid #1a1a1a;
+  z-index: 1;
+}
+.bright-collage-cover .date-block {
+  position: absolute;
+  left: 130px; top: 130px;
+  width: 540px;
+  background: #4ec3e8; border: 2.5px solid #1a1a1a;
+  padding: 36px 48px;
+  z-index: 2;
+  font-size: 44px; font-weight: 600;
+  line-height: 1.15; color: #1a1a1a;
+  letter-spacing: -0.005em;
+}
+.bright-collage-cover .title-block {
+  position: absolute;
+  left: 380px; top: 360px;
+  width: 1180px;
+  background: #e85b46; border: 2.5px solid #1a1a1a;
+  padding: 80px 90px 100px;
+  z-index: 3;
+}
+.bright-collage-cover .title-block h1 {
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 168px; font-weight: 700;
+  line-height: 1.0; letter-spacing: -0.025em;
+  color: #1a1a1a;
+  margin: 0;
+}
+.bright-collage-cover .page-badge {
+  position: absolute;
+  right: 60px; top: 40px;
+  width: 50px; height: 50px;
+  background: #4baf6b; border: 2.5px solid #1a1a1a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; color: #ffffff;
+  z-index: 4;
+}
+
+.bright-collage-overview {
+  position: absolute; inset: 0;
+  background: #fef7c8; color: #1a1a1a;
+  font-family: "DM Sans", system-ui, sans-serif;
+  overflow: hidden;
+  padding: 80px 100px;
+  display: flex; flex-direction: column;
+  gap: 60px;
+}
+.bright-collage-overview .heading-card {
+  background: #ffffff;
+  border: 2.5px solid #1a1a1a;
+  padding: 32px 40px;
+  align-self: flex-start;
+  max-width: 480px;
+}
+.bright-collage-overview .heading-card h2 {
+  font-size: 84px; font-weight: 700;
+  line-height: 1.0; letter-spacing: -0.025em;
+  margin: 0;
+}
+.bright-collage-overview .options {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  flex: 1;
+}
+.bright-collage-overview .opt-card {
+  border: 2.5px solid #1a1a1a;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.bright-collage-overview .opt-card .photo {
+  aspect-ratio: 16 / 11;
+  background: #ddd center/cover no-repeat;
+  border-bottom: 2.5px solid #1a1a1a;
+}
+.bright-collage-overview .opt-card .panel {
+  flex: 1;
+  padding: 28px 32px 36px;
+  color: #ffffff;
+  display: flex; flex-direction: column;
+}
+.bright-collage-overview .opt-card .panel.green { background: #4baf6b; }
+.bright-collage-overview .opt-card .panel.red   { background: #e85b46; }
+.bright-collage-overview .opt-card .panel.blue  { background: #4ec3e8; color: #1a1a1a; }
+.bright-collage-overview .opt-card .panel.teal  { background: #3fa893; }
+.bright-collage-overview .opt-card .panel.yellow { background: #f5d23a; color: #1a1a1a; }
+.bright-collage-overview .opt-card .panel.pink  { background: #f9b9d0; color: #1a1a1a; }
+.bright-collage-overview .opt-card .panel h3 {
+  font-size: 32px; font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 16px;
+}
+.bright-collage-overview .opt-card .panel p {
+  font-size: 17px; font-weight: 400;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.92);
+  margin: 0;
+}
+.bright-collage-overview .opt-card .panel.blue p,
+.bright-collage-overview .opt-card .panel.yellow p,
+.bright-collage-overview .opt-card .panel.pink p { color: rgba(26,26,26,0.85); }
+.bright-collage-overview .page-badge {
+  position: absolute;
+  right: 60px; top: 40px;
+  width: 50px; height: 50px;
+  background: #4baf6b; border: 2.5px solid #1a1a1a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; color: #ffffff;
+}
+
+.bright-collage-pros {
+  position: absolute; inset: 0;
+  background: #fef7c8; color: #1a1a1a;
+  font-family: "DM Sans", system-ui, sans-serif;
+  overflow: hidden;
+  padding: 70px 100px 100px;
+  display: flex; flex-direction: column;
+  gap: 40px;
+}
+.bright-collage-pros .heading-card {
+  background: #f9b9d0;
+  border: 2.5px solid #1a1a1a;
+  padding: 28px 44px;
+  align-self: flex-start;
+  max-width: 760px;
+}
+.bright-collage-pros .heading-card h2 {
+  font-size: 64px; font-weight: 700;
+  line-height: 1.0; letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.bright-collage-pros .options {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  flex: 1;
+}
+.bright-collage-pros .opt-card {
+  border: 2.5px solid #1a1a1a;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.bright-collage-pros .opt-card .photo {
+  aspect-ratio: 16 / 9;
+  background: #ddd center/cover no-repeat;
+  border-bottom: 2.5px solid #1a1a1a;
+}
+.bright-collage-pros .opt-card .panel {
+  flex: 1;
+  padding: 26px 32px 32px;
+  color: #ffffff;
+  display: flex; flex-direction: column;
+}
+.bright-collage-pros .opt-card .panel.green { background: #4baf6b; }
+.bright-collage-pros .opt-card .panel.red   { background: #e85b46; }
+.bright-collage-pros .opt-card .panel.blue  { background: #4ec3e8; color: #1a1a1a; }
+.bright-collage-pros .opt-card .panel.teal  { background: #3fa893; }
+.bright-collage-pros .opt-card .panel h3 {
+  font-size: 30px; font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 18px;
+}
+.bright-collage-pros .opt-card .panel .label {
+  font-size: 16px; font-weight: 700;
+  margin: 14px 0 8px;
+  letter-spacing: 0.02em;
+}
+.bright-collage-pros .opt-card .panel .label:first-of-type { margin-top: 0; }
+.bright-collage-pros .opt-card .panel ul {
+  list-style: none; padding: 0; margin: 0;
+}
+.bright-collage-pros .opt-card .panel li {
+  font-size: 14px; font-weight: 400;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.92);
+  padding-left: 18px;
+  position: relative;
+}
+.bright-collage-pros .opt-card .panel li::before {
+  content: "•";
+  position: absolute; left: 4px; top: 0;
+  font-weight: 700;
+}
+.bright-collage-pros .opt-card .panel.blue li,
+.bright-collage-pros .opt-card .panel.blue .label { color: rgba(26,26,26,0.85); }
+.bright-collage-pros .opt-card .panel.blue h3 { color: #1a1a1a; }
+.bright-collage-pros .page-badge {
+  position: absolute;
+  right: 60px; top: 40px;
+  width: 50px; height: 50px;
+  background: #4baf6b; border: 2.5px solid #1a1a1a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; color: #ffffff;
+}
+</style>
+</head>
+<body>
+
+<div id="progress" class="slide-progress"></div>
+<div id="deck" class="deck" data-transition="slide">
+
+<!-- Slide 1 -->
+<section class="slide bright-collage-cover" data-page="1">
+  <div class="blocks" data-bp-id="blocks-1">
+    <div class="yellow-bar" data-bp-id="yellow-1"></div>
+    <div class="green-tab" data-bp-id="green-1"></div>
+    <div class="date-block" data-bp-id="date-1">Q3 2026<br>Team Offsite</div>
+    <div class="title-block" data-bp-id="title-1"><h1>Location<br>Options/<br>Proposals</h1></div>
+  </div>
+  <div class="page-badge" data-bp-id="page-1">1</div>
+</section>
+
+<!-- Slide 2 -->
+<section class="slide bright-collage-overview" data-page="2">
+  <div class="heading-card" data-bp-id="heading-2">
+    <h2>Options<br>Overview</h2>
+  </div>
+  <div class="options" data-bp-id="options-2">
+    <div class="opt-card" data-bp-id="opt-2-1">
+      <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1542224566-6e85f2e6772f?w=900&q=80');"></div>
+      <div class="panel green">
+        <h3>Option 1: Mountain Lodge</h3>
+        <p>A secluded resort in the Rockies. High altitude, crisp air, and zero distractions. Perfect for deep focus and hiking.</p>
+      </div>
+    </div>
+    <div class="opt-card" data-bp-id="opt-2-2">
+      <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=80');"></div>
+      <div class="panel red">
+        <h3>Option 2: Beachside Villa</h3>
+        <p>Coastal property with ocean views. Relaxed vibe, outdoor workshops, and team surfing lessons in the afternoon.</p>
+      </div>
+    </div>
+    <div class="opt-card" data-bp-id="opt-2-3">
+      <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1449844908441-8829872d2607?w=900&q=80');"></div>
+      <div class="panel blue">
+        <h3>Option 3: City Hub</h3>
+        <p>Boutique hotel in downtown. Fast Wi-Fi, premium dining, and easy access to local tech meetups and nightlife.</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-badge" data-bp-id="page-2">2</div>
+</section>
+
+<!-- Slide 3 -->
+<section class="slide bright-collage-pros" data-page="3">
+  <div class="heading-card" data-bp-id="heading-3">
+    <h2>Location Trade-off</h2>
+  </div>
+  <div class="options" data-bp-id="options-3">
+    <div class="opt-card" data-bp-id="opt-3-1">
+      <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1542224566-6e85f2e6772f?w=900&q=80');"></div>
+      <div class="panel green">
+        <h3>Option 1: Mountain Lodge</h3>
+        <div class="label">Pros:</div>
+        <ul><li>Incredible scenery and focus</li><li>Great for group hiking</li><li>Very private environment</li></ul>
+        <div class="label">Cons:</div>
+        <ul><li>Longer travel time from HQ</li><li>Spotty cell service</li></ul>
+      </div>
+    </div>
+    <div class="opt-card" data-bp-id="opt-3-2">
+      <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=80');"></div>
+      <div class="panel red">
+        <h3>Option 2: Beachside Villa</h3>
+        <div class="label">Pros:</div>
+        <ul><li>High team morale and relaxation</li><li>Many outdoor team activities</li><li>Shorter flight for most</li></ul>
+        <div class="label">Cons:</div>
+        <ul><li>More expensive during peak season</li><li>Potential for distraction</li></ul>
+      </div>
+    </div>
+    <div class="opt-card" data-bp-id="opt-3-3">
+      <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1449844908441-8829872d2607?w=900&q=80');"></div>
+      <div class="panel blue">
+        <h3>Option 3: City Hub</h3>
+        <div class="label">Pros:</div>
+        <ul><li>Easiest logistics and travel</li><li>Best internet and meeting spaces</li><li>Endless dining options</li></ul>
+        <div class="label">Cons:</div>
+        <ul><li>Lacks the "getaway" feeling</li><li>Harder to keep team together</li></ul>
+      </div>
+    </div>
+  </div>
+  <div class="page-badge" data-bp-id="page-3">3</div>
+</section>
+
+<!-- Slide 4 -->
+<section class="slide bright-collage-overview" data-page="4">
+  <div class="heading-card" style="background: #f5d23a;" data-bp-id="heading-4">
+    <h2>Proposed<br>Activities</h2>
+  </div>
+  <div class="options" data-bp-id="options-4">
+    <div class="opt-card" data-bp-id="opt-4-1">
+      <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&q=80');"></div>
+      <div class="panel pink">
+        <h3>1. Strategy Sync</h3>
+        <p>Morning sessions dedicated to OKRs, product roadmap, and aligning our goals for the next 12 months. Cross-team collaboration.</p>
+      </div>
+    </div>
+    <div class="opt-card" data-bp-id="opt-4-2">
+      <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=900&q=80');"></div>
+      <div class="panel teal">
+        <h3>2. Hackathon</h3>
+        <p>A 24-hour sprint to build internal tools or experimental features we haven't had time to explore. Prizes for the most creative ideas.</p>
+      </div>
+    </div>
+    <div class="opt-card" data-bp-id="opt-4-3">
+      <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=900&q=80');"></div>
+      <div class="panel yellow">
+        <h3>3. Unwind & Connect</h3>
+        <p>Evening dinners, group excursions, and unstructured time to build relationships outside the usual work context.</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-badge" data-bp-id="page-4">4</div>
+</section>
+
+<!-- Slide 5 -->
+<section class="slide bright-collage-cover" data-page="5">
+  <div class="blocks" data-bp-id="blocks-5">
+    <div class="yellow-bar" data-bp-id="yellow-5" style="background: #4ec3e8; right: 150px;"></div>
+    <div class="green-tab" data-bp-id="green-5" style="background: #f9b9d0; left: 400px; top: 320px;"></div>
+    <div class="date-block" data-bp-id="date-5" style="background: #f5d23a;">Vote by<br>Friday 5PM</div>
+    <div class="title-block" data-bp-id="title-5" style="background: #3fa893;"><h1>The Decision<br>Is Yours<br>To Make</h1></div>
+  </div>
+  <div class="page-badge" data-bp-id="page-5">5</div>
+</section>
+
+</div>
+
+<div class="slide-controls">
+  <button id="prev-btn" class="ctrl-btn" aria-label="Previous slide">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div id="counter" class="slide-counter">1 / 5</div>
+  <button id="next-btn" class="ctrl-btn" aria-label="Next slide">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+</div>
+
+<script>
+(function() {
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var current = 0;
+  var counter = document.getElementById('counter');
+  var progress = document.getElementById('progress');
+  var prevBtn = document.getElementById('prev-btn');
+  var nextBtn = document.getElementById('next-btn');
+
+  function show(index) {
+    current = Math.max(0, Math.min(index, total - 1));
+    for (var i = 0; i < slides.length; i++) {
+      var s = slides[i];
+      s.classList.remove('slide--active', 'slide--prev', 'slide--next');
+      if (i === current) s.classList.add('slide--active');
+      else if (i < current) s.classList.add('slide--prev');
+      else s.classList.add('slide--next');
+    }
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    var h = Math.ceil(1080 * scale);
+    try { window.parent.postMessage({ type: 'html-viewer-height', height: h }, '*'); } catch(e) {}
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault(); show(current + 1);
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+      e.preventDefault(); show(current - 1);
+    }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+    if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+    }
+  });
+
+  var startX = 0, startY = 0;
+  document.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      show(current + (dx < 0 ? 1 : -1));
+    }
+  });
+
+  prevBtn.addEventListener('click', function() { show(current - 1); });
+  nextBtn.addEventListener('click', function() { show(current + 1); });
+
+  function resize() {
+    var deck = document.getElementById('deck');
+    var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    deck.style.transform = 'scale(' + scale + ')';
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  var startPage = parseInt(new URLSearchParams(window.location.search).get('page'), 10);
+  show(isNaN(startPage) ? 0 : Math.max(0, startPage - 1));
+  document.body.focus();
+})();
+</script>
+</body>
+</html>

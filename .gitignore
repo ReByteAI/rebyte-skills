@@ -4,3 +4,6 @@ node_modules/
 dist/
 .env
 .env.*
+
+# vm-test outputs (generated per run — PNGs + report.md)
+**/*.test/out/

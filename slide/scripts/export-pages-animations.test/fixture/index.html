@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="rebyte-style" content="test-animations@1.0.0" />
+  <title>Animation-heavy Test Deck</title>
+  <style>
+    :root {
+      --bg: #ffe5d9;
+      --ink: #4a1e1a;
+      --accent: #d62828;
+      --accent-2: #3a86ff;
+      --accent-3: #06a77d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: var(--bg); color: var(--ink); font-family: "Inter", system-ui, sans-serif; }
+    .deck { position: relative; width: 1920px; height: 1080px; }
+    section.slide {
+      position: absolute; inset: 0; padding: 96px;
+      display: none;
+      flex-direction: column; justify-content: center; gap: 48px;
+    }
+    section.slide.slide--active { display: flex; }
+
+    /* Every element on every slide has an entrance animation that takes
+       2 seconds to finish. If the override doesn't disable them, the
+       screenshot fires while elements are still fading in / sliding in
+       and we get a visually incomplete frame. */
+    @keyframes slide-up {
+      0%   { transform: translateY(80px); opacity: 0; }
+      100% { transform: translateY(0);    opacity: 1; }
+    }
+    @keyframes fade-scale {
+      0%   { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    @keyframes slide-right {
+      0%   { transform: translateX(-200px); opacity: 0; }
+      100% { transform: translateX(0);      opacity: 1; }
+    }
+
+    h1 { font-size: 120px; font-weight: 900; line-height: 1; color: var(--accent);
+         animation: slide-up 2s ease-out both; }
+    h1 em { font-style: italic; color: var(--accent-2); }
+
+    p.lead { font-size: 36px; font-weight: 400; color: var(--ink); max-width: 1400px;
+             animation: slide-up 2s ease-out 0.4s both; }
+
+    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+             animation: fade-scale 2s cubic-bezier(.2,.7,.3,1) 0.2s both; }
+    .grid3 > div {
+      background: white; border-radius: 24px; padding: 40px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.1);
+      animation: slide-up 1.8s ease-out both;
+    }
+    .grid3 > div:nth-child(1) { animation-delay: 0.3s; border-top: 8px solid var(--accent); }
+    .grid3 > div:nth-child(2) { animation-delay: 0.6s; border-top: 8px solid var(--accent-2); }
+    .grid3 > div:nth-child(3) { animation-delay: 0.9s; border-top: 8px solid var(--accent-3); }
+    .grid3 h3 { font-size: 44px; font-weight: 800; margin-bottom: 16px; }
+    .grid3 p  { font-size: 22px; line-height: 1.5; }
+
+    .stat { text-align: center;
+            animation: fade-scale 2s cubic-bezier(.2,.7,.3,1) both; }
+    .stat .num { font-size: 240px; font-weight: 900; color: var(--accent); line-height: 1;
+                 animation: fade-scale 2s cubic-bezier(.2,.7,.3,1) 0.3s both; }
+    .stat .label { font-size: 48px; font-weight: 600; margin-top: 32px;
+                   animation: slide-right 2s ease-out 0.6s both; }
+
+    .pageno {
+      position: absolute; top: 48px; right: 48px;
+      background: var(--accent); color: white;
+      width: 56px; height: 56px; border-radius: 12px;
+      display: grid; place-items: center;
+      font-size: 28px; font-weight: 900;
+      animation: fade-scale 2s ease-out 0.1s both;
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+
+    <section class="slide slide--active" data-page="1">
+      <span class="pageno">1</span>
+      <h1 data-bp-id="t1">Motion <em>Heavy</em><br/>Cover</h1>
+      <p class="lead" data-bp-id="l1">Every element on every slide fades and slides in over 2 seconds. The export must capture the final state, not a mid-animation frame.</p>
+    </section>
+
+    <section class="slide" data-page="2">
+      <span class="pageno">2</span>
+      <h1>Three <em>Pillars</em></h1>
+      <div class="grid3">
+        <div>
+          <h3 style="color: var(--accent);">Reliability</h3>
+          <p data-bp-id="p1">Every capture a complete frame. No partial slides, no mid-animation ghosts. Bounded wall-clock budget so a broken deck can't stall the pipeline.</p>
+        </div>
+        <div>
+          <h3 style="color: var(--accent-2);">Fidelity</h3>
+          <p data-bp-id="p2">Screenshots match what a human viewer would see at rest — final-state layout, decoded images, rendered text with the right font weight.</p>
+        </div>
+        <div>
+          <h3 style="color: var(--accent-3);">Determinism</h3>
+          <p data-bp-id="p3">Same deck produces the same pixels on every run. No dependence on wall-clock timing for CSS animations or transitions.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-page="3">
+      <span class="pageno">3</span>
+      <div class="stat">
+        <div class="num" data-bp-id="stat-num">2s</div>
+        <div class="label" data-bp-id="stat-label">animation duration — must be overridden</div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

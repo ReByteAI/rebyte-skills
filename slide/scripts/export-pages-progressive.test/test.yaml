@@ -1,0 +1,72 @@
+name: export-pages — progressive display (no-click contract)
+
+# Protocol Rule 1: if a slide has progressive display (click-to-reveal),
+# export-pages must capture the INITIAL state only — no simulated clicks,
+# no synthetic input. This fixture's slide 2 hides all bullets until the
+# user clicks; a single click reveals one bullet (up to 3).
+#
+# If the script clicks the active slide (e.g., v2's readiness-kick
+# fallback), slide 2's captured PNG will show revealed bullets instead of
+# the "Click to reveal" prompt. The vision layer will score it as a
+# defect because the observed state contradicts the expected first-screen
+# description.
+
+fixture:
+  src: ./fixture
+  dst: /code/slides/test-progressive
+
+script:
+  src: ../export-pages.sh
+  dst: /home/user/.skills/slide/scripts/export-pages.sh
+
+run: bash /home/user/.skills/slide/scripts/export-pages.sh $FIXTURE/index.html
+timeoutMs: 180000
+
+collect:
+  - remote: /code/slides/test-progressive/*.png
+    local: ./out
+
+pages:
+  - name: 01.png
+    description: |
+      Cover slide. Pale cream background. Very large orange-red title
+      text across two lines reading "Progressive" and "Display Test".
+      Below the title, a single line of dark brown body text reading
+      "This deck has a click-to-reveal slide. The export should capture
+      its INITIAL state." A small teal/green page-number badge "1" in
+      the top-right corner.
+
+  - name: 02.png
+    description: |
+      The FIRST-SCREEN state of a progressive-display slide. Pale cream
+      background. Large dark heading at top reading "Agenda". Below the
+      heading: a single prominent dashed-border rounded box with
+      orange-red text reading "Click to reveal". No bullet points
+      should be visible — the three numbered items ("1. Introductions",
+      "2. Product roadmap Q3", "3. Open questions") are hidden in the
+      initial state and only appear after the viewer clicks. Teal "2"
+      page-number badge in the top-right.
+
+      CRITICAL: If you see any of the numbered bullet items visible in
+      the screenshot, mark this as a defect — it means the export
+      script advanced the slide's state by simulating a click, which
+      violates the slide protocol's progressive-display rule.
+
+  - name: 03.png
+    description: |
+      Final slide with a solid teal/green background filling the whole
+      canvas. White text. Very large bold heading reading "Thank you."
+      and a smaller line below reading "Questions welcome." Page-number
+      badge "3" in the top-right.
+
+expect:
+  exitCode: 0
+  files:
+    - name: 01.png
+      imageMinDim: [1800, 1000]
+    - name: 02.png
+      imageMinDim: [1800, 1000]
+    - name: 03.png
+      imageMinDim: [1800, 1000]
+  uniquePngHashes: true
+  minScore: 7

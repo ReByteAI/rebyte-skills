@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="rebyte-style" content="test-progressive@1.0.0" />
+  <title>Progressive Display Test Deck</title>
+  <style>
+    :root {
+      --bg: #fef9e7;
+      --ink: #2d2517;
+      --accent: #d94b2a;
+      --accent-2: #3a9d7e;
+      --surface: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: var(--bg); color: var(--ink); font-family: "Inter", system-ui, sans-serif; }
+    .deck { position: relative; width: 1920px; height: 1080px; }
+    section.slide {
+      position: absolute; inset: 0; padding: 80px;
+      display: none;
+      flex-direction: column; justify-content: center;
+    }
+    section.slide.slide--active { display: flex; }
+
+    /* Cover */
+    .slide--title h1 { font-size: 108px; font-weight: 900; line-height: 1.05; color: var(--accent); }
+    .slide--title p  { font-size: 42px; font-weight: 400; color: var(--ink); margin-top: 24px; opacity: 0.8; }
+
+    /* Progressive slide */
+    .progressive { gap: 40px; }
+    .progressive h2 { font-size: 72px; font-weight: 800; color: var(--ink); }
+    .progressive .prompt {
+      font-size: 44px; font-weight: 500; color: var(--accent);
+      padding: 32px 48px; border: 4px dashed var(--accent); border-radius: 24px;
+      display: inline-block; align-self: flex-start;
+      cursor: pointer;
+    }
+    .progressive .bullets { list-style: none; margin-top: 24px; display: grid; gap: 20px; }
+    .progressive .bullets li {
+      font-size: 38px; font-weight: 600;
+      padding: 24px 32px; background: var(--surface); border-radius: 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.08);
+      /* Default hidden — revealed only when body has .reveal-N or greater */
+      display: none;
+    }
+    body.reveal-1 .progressive .bullets li:nth-child(1) { display: block; }
+    body.reveal-2 .progressive .bullets li:nth-child(-n+2) { display: block; }
+    body.reveal-3 .progressive .bullets li:nth-child(-n+3) { display: block; }
+    /* Once any reveal happened, hide the initial prompt */
+    body.reveal-1 .progressive .prompt,
+    body.reveal-2 .progressive .prompt,
+    body.reveal-3 .progressive .prompt { display: none; }
+
+    /* Final */
+    .slide--final { background: var(--accent-2); color: white; }
+    .slide--final h1 { font-size: 120px; font-weight: 900; line-height: 1; }
+    .slide--final p { font-size: 38px; margin-top: 40px; opacity: 0.9; }
+
+    /* Page number badge (protocol-style) */
+    .pageno {
+      position: absolute; top: 48px; right: 48px;
+      background: var(--accent-2); color: white;
+      width: 48px; height: 48px; border-radius: 8px;
+      display: grid; place-items: center;
+      font-size: 24px; font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+
+    <section class="slide slide--title slide--active" data-page="1">
+      <span class="pageno">1</span>
+      <h1 data-bp-id="cover-title">Progressive<br/>Display Test</h1>
+      <p data-bp-id="cover-tagline">This deck has a click-to-reveal slide. The export should capture its INITIAL state.</p>
+    </section>
+
+    <section class="slide progressive" data-page="2">
+      <span class="pageno">2</span>
+      <h2 data-bp-id="prog-heading">Agenda</h2>
+      <div class="prompt" data-bp-id="prog-prompt">Click to reveal</div>
+      <ul class="bullets">
+        <li data-bp-id="prog-1">1. Introductions</li>
+        <li data-bp-id="prog-2">2. Product roadmap Q3</li>
+        <li data-bp-id="prog-3">3. Open questions</li>
+      </ul>
+    </section>
+
+    <section class="slide slide--final" data-page="3">
+      <span class="pageno">3</span>
+      <h1 data-bp-id="final-h">Thank you.</h1>
+      <p data-bp-id="final-p">Questions welcome.</p>
+    </section>
+  </div>
+
+  <script>
+    // Progressive reveal on ANY click anywhere inside the active slide.
+    // The export script must NOT trigger this handler — otherwise slide 2
+    // will capture the revealed state (or some intermediate) instead of
+    // the initial "Click to reveal" prompt.
+    let revealCount = 0;
+    document.addEventListener('click', (e) => {
+      const active = document.querySelector('section.slide--active');
+      if (!active) return;
+      if (!active.contains(e.target)) return;
+      if (!active.classList.contains('progressive')) return;
+      if (revealCount >= 3) return;
+      revealCount++;
+      document.body.classList.remove('reveal-1', 'reveal-2', 'reveal-3');
+      document.body.classList.add('reveal-' + revealCount);
+    });
+  </script>
+</body>
+</html>

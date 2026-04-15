@@ -1,0 +1,89 @@
+name: export-pages — bright-collage 5 slides
+
+# A protocol-compliant deck in the bright-collage style: cream background,
+# Memphis/Bauhaus color blocks, photo cards, a minimalist final slide.
+# Exercises every failure mode the script has hit in practice: photos
+# loading asynchronously (slides 2 & 4), flat-color slides that compress
+# small but are correct (slide 5), and bleed-through risk when a second
+# slide is activated (slide 2).
+
+fixture:
+  src: ./fixture
+  dst: /code/slides/test-bright-collage
+
+script:
+  src: ../export-pages.sh
+  dst: /home/user/.skills/slide/scripts/export-pages.sh
+
+run: bash /home/user/.skills/slide/scripts/export-pages.sh $FIXTURE/index.html
+timeoutMs: 180000
+
+collect:
+  - remote: /code/slides/test-bright-collage/*.png
+    local: ./out
+
+pages:
+  - name: 01.png
+    description: |
+      Cover slide. Cream/pale-yellow background. A small blue block in
+      the upper-left contains two lines of text: "Q3 2026" and "Team
+      Offsite". A large orange block dominates the left-center with
+      bold black serif-sans text reading "Location Options/Proposals"
+      across three lines. Decorative elements: a small green bar, a
+      yellow rectangle on the right edge. Tiny green page-number badge
+      "1" in the top-right.
+
+  - name: 02.png
+    description: |
+      "Options Overview" title in the upper-left inside a thin outlined
+      rectangle. Three photo cards below in a row: (1) green card
+      labelled "Option 1: Mountain Lodge" with a mountain/sunrise photo,
+      (2) orange-red card labelled "Option 2: Beachside Villa" with a
+      beach photo, (3) blue card labelled "Option 3: City Hub" with a
+      photo of a house among trees. Each card has a short description
+      in white under the title. Green "2" badge top-right. No overlapping
+      text from other slides.
+
+  - name: 03.png
+    description: |
+      Upper-left shows a pink/salmon block containing the text
+      "Location Trade-off". Below, three vertical cards in a row
+      matching slide 2's colors (green, orange, blue) but without
+      photos — each card shows option name at top, then a "Pros:" bullet
+      list and "Cons:" bullet list. Green "3" badge top-right.
+
+  - name: 04.png
+    description: |
+      Upper-left yellow block reads "Proposed Activities" in bold black
+      text. Three photo cards below: (1) pink/salmon card "Strategy
+      Sync" with people at laptops, (2) green card "Hackathon" with
+      people around a table, (3) yellow card "Unwind & Connect" with
+      people at a long dining table. Each card has a hero photo at top
+      and white body text below. Green "4" badge top-right.
+
+  - name: 05.png
+    description: |
+      Minimalist closing slide. Cream/pale-yellow background. A small
+      yellow block in the upper-left reads "Vote by / Friday 5PM". A
+      large teal/dark-green block center-right contains very large bold
+      black text reading "The Decision Is Yours To Make" across
+      multiple lines. A small blue vertical rectangle sits on the right.
+      Tiny pink accent above the teal block. Green "5" badge top-right.
+      This slide is intentionally sparse (mostly solid color blocks and
+      type) — low pixel complexity is expected, NOT a defect.
+
+expect:
+  exitCode: 0
+  files:
+    - name: 01.png
+      imageMinDim: [1800, 1000]
+    - name: 02.png
+      imageMinDim: [1800, 1000]
+    - name: 03.png
+      imageMinDim: [1800, 1000]
+    - name: 04.png
+      imageMinDim: [1800, 1000]
+    - name: 05.png
+      imageMinDim: [1800, 1000]
+  uniquePngHashes: true
+  minScore: 7
