@@ -1,6 +1,6 @@
 ---
 name: text-to-speech
-description: Convert text to speech audio. Picks from a catalog of OpenAI and Gemini voices. Supports style/prosody control — inline bracket tags for Gemini voices, free-form "instructions" for OpenAI voices on gpt-4o-mini-tts. Use when user wants voiceovers, narration, audio for videos, multi-voice dialogue, expressive or whispered speech.
+description: Convert text to speech audio. Picks from a catalog of OpenAI (gpt-audio) and Gemini voices. Supports style/prosody control — natural language directions for Gemini voices, "instructions" field for OpenAI voices. Use when user wants voiceovers, narration, audio for videos, multi-voice dialogue, expressive or whispered speech.
 ---
 
 # Text to Speech
@@ -15,7 +15,7 @@ Every voice has an explicit provider prefix. **Pick the voice that matches the t
 
 ### OpenAI voices (style via `instructions` field)
 
-Only `gpt-4o-mini-tts` respects `instructions`. The relay picks this model automatically whenever you pass `instructions`. Without `instructions` you get `tts-1` (cheaper, no style control).
+Uses `gpt-audio-mini` by default (fast, cheap). Pass `model: "gpt-audio"` for highest quality. Style is controlled via the `instructions` field — a natural language directive for delivery.
 
 | Voice | Character | Good for | Example `instructions` |
 |---|---|---|---|
@@ -27,12 +27,11 @@ Only `gpt-4o-mini-tts` respects `instructions`. The relay picks this model autom
 | `openai:sage` | Female, measured | Meditation, ASMR, calm explainer | `Soft and slow, gentle on every consonant.` |
 | `openai:verse` | Neutral, versatile | General purpose | `Neutral delivery, no strong emotion.` |
 
-**Legacy voices** (no `instructions` support — use only when you need tts-1 pricing):
-`openai:nova`, `openai:alloy`, `openai:echo`, `openai:fable`, `openai:onyx`, `openai:shimmer`.
+Additional voices: `openai:nova`, `openai:alloy`, `openai:echo`, `openai:fable`, `openai:onyx`, `openai:shimmer`.
 
-### Gemini voices (style via inline `[tags]` in text)
+### Gemini voices (style via natural language in text)
 
-Backend: `gemini-3.1-flash-tts-preview`. Style is controlled by natural-language bracket tags **inside the text itself**. Tags aren't spoken — they're interpreted as directives. You can invent any tag that reads like an English adverb/adjective; the examples below are proven starting points.
+Backend: `gemini-3.1-flash-tts-preview`. Style is controlled by writing natural-language directions **as part of the text itself**. The model interprets the directions and speaks accordingly. Think of it like directing an actor — describe how to deliver the line, then give the line.
 
 | Voice | Character | Good for |
 |---|---|---|
@@ -43,17 +42,19 @@ Backend: `gemini-3.1-flash-tts-preview`. Style is controlled by natural-language
 | `gemini:Aoede` | Female, breezy, light | Whispered, intimate, confessional |
 | `gemini:Leda` | Female, youthful | Bright explainer, younger audience |
 
-Additional Gemini voices available without a dedicated profile: `gemini:Orus`, `gemini:Zephyr`, `gemini:Callirrhoe`, `gemini:Autonoe`, `gemini:Enceladus`, `gemini:Iapetus`, `gemini:Umbriel`, `gemini:Algieba`, `gemini:Despina`, `gemini:Algenib`, `gemini:Rasalgethi`, `gemini:Achernar`, `gemini:Schedar`, `gemini:Gacrux`, `gemini:Sulafat`.
+Additional Gemini voices: `gemini:Orus`, `gemini:Zephyr`, `gemini:Callirrhoe`, `gemini:Autonoe`, `gemini:Enceladus`, `gemini:Iapetus`, `gemini:Umbriel`, `gemini:Algieba`, `gemini:Despina`, `gemini:Algenib`, `gemini:Rasalgethi`, `gemini:Achernar`, `gemini:Schedar`, `gemini:Gacrux`, `gemini:Sulafat`.
 
-**Inline tag patterns** (compose freely — these are examples, not an enum):
+**Style direction patterns** (natural language — these are examples, not an enum):
 
-- `[whispered] We have to be quiet here.`
-- `[excited, fast] You are not going to believe what just happened!`
-- `[sad, slow] I don't think this is going to work out.`
-- `[deadpan] Yes. That is how physics works.`
-- `[warm, smiling] Welcome back — great to have you.`
-- `[British accent] A proper cup of tea, if you please.`
-- Mid-sentence shifts work too: `[neutral] The meeting starts at nine. [conspiratorial] But between you and me, it will run late.`
+- `Say in a whisper: We have to be quiet here.`
+- `Say excitedly and fast: You are not going to believe what just happened!`
+- `Say sadly, slowly: I don't think this is going to work out.`
+- `Deadpan delivery: Yes. That is how physics works.`
+- `Warm and smiling: Welcome back — great to have you.`
+- `In a British accent: A proper cup of tea, if you please.`
+- Mid-sentence shifts: `The meeting starts at nine. [whispers] But between you and me, it will run late.`
+
+**Important:** Bracket tags like `[whispers]` work for short text but fail silently with some voice+length combos (the API returns an error). Natural language directions like `Say cheerfully:` are more reliable across all voices.
 
 ## Synthesize speech
 
@@ -69,14 +70,14 @@ curl -X POST "$API_URL/api/data/tts/synthesize" \
   }' | jq -r '.audio.base64' | base64 -d > voiceover.mp3
 ```
 
-Gemini version (note the inline tag inside `text`):
+Gemini version (style direction is part of the text):
 
 ```bash
 curl -X POST "$API_URL/api/data/tts/synthesize" \
   -H "Authorization: Bearer $AUTH_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "[whispered] I have a secret to tell you.",
+    "text": "Say in a soft whisper: I have a secret to tell you.",
     "voice": "gemini:Aoede"
   }' | jq -r '.audio.base64' | base64 -d > whisper.wav
 ```
@@ -147,12 +148,11 @@ curl -X POST "$API_URL/api/data/tts/synthesize_dialogue" \
 
 | Parameter | Type | Required | Default | Notes |
 |---|---|---|---|---|
-| `text` | string | yes | — | Max 4096 chars. For Gemini voices, put style tags here. |
+| `text` | string | yes | — | Max 4096 chars. For Gemini voices, include style directions as part of the text (e.g. "Say cheerfully: ..."). |
 | `voice` | string | no | `openai:nova` | Use explicit `openai:` or `gemini:` prefix. |
-| `instructions` | string | no | — | OpenAI `gpt-4o-mini-tts` only. Ignored by Gemini; to style Gemini, embed tags in `text`. |
-| `model` | string | no | auto | OpenAI only: `gpt-4o-mini-tts` \| `tts-1-hd` \| `tts-1`. Relay auto-picks `gpt-4o-mini-tts` when `instructions` is set. |
+| `instructions` | string | no | — | Style directive for OpenAI voices (sent as system message). For Gemini, write style directions as part of the `text` instead. |
+| `model` | string | no | `gpt-audio-mini` | OpenAI only: `gpt-audio` (best quality) \| `gpt-audio-mini` (faster, cheaper). Ignored for Gemini. |
 | `format` | string | no | `mp3` | OpenAI: `mp3` \| `wav` \| `opus` \| `aac` \| `flac` \| `pcm`. Gemini: always returns `wav` regardless. |
-| `speed` | number | no | `1.0` | OpenAI only. Range `0.25`–`4.0`. Ignored by Gemini. |
 
 ## Response
 
@@ -176,12 +176,12 @@ Decode `audio.base64` with `base64 -d` and save to disk.
 
 | Need | Pick |
 |---|---|
-| Just read this text, no style | Any OpenAI legacy voice (`openai:nova` is the safe default — cheapest, `tts-1`) |
-| Specific tone, one consistent delivery | OpenAI `gpt-4o-mini-tts` voice + `instructions` — easier to version-control the prompt |
-| Style shifts mid-sentence (whispered → excited → calm) | Gemini voice + inline `[tag]` tags — only way to do this cleanly |
-| Accent switching within one clip | Gemini — it handles accent tags natively |
+| Just read this text, no style | OpenAI `gpt-audio-mini` with any voice (`openai:nova` is a safe default) |
+| Specific tone, one consistent delivery | OpenAI `gpt-audio-mini` + `instructions` — easier to version-control the prompt |
+| Style shifts mid-sentence (whispered → excited → calm) | Gemini voice + natural language directions in text |
+| Accent switching within one clip | Gemini — describe the accent in the text |
 | Multi-speaker dialogue as a single clip | Gemini via `synthesize_dialogue` (native two-speaker blending; see below) |
-| Lowest cost per character | OpenAI `tts-1` (legacy voices) |
+| Lowest cost per character | OpenAI `gpt-audio-mini` |
 | Best prosody on a single even read | Either works; test both for your use case |
 
 ## Long text (over 4096 characters)
@@ -219,6 +219,6 @@ Upload finished audio to the Artifact Store so the user can access it.
 
 - **Read the voice's character column**; don't just pick `openai:nova` by habit. The voice does more for tone than any `instructions` string.
 - **Keep `instructions` short** — two sentences, concrete. `"Speak slowly and somberly"` beats a paragraph.
-- **For Gemini tags, pick words that would describe the delivery to a human director**: `[whispered]`, `[excited]`, `[mock-serious]`, `[slightly drunk]`. If it would make sense on a film set, it probably works here.
+- **For Gemini style, direct the voice like a human actor**: `Say cheerfully:`, `In a hushed whisper:`, `With mock seriousness:`. If it would make sense on a film set, it probably works here. If Gemini rejects a style+voice combo, try a different voice or use OpenAI with `instructions`.
 - **Test one sentence first** before synthesizing a long script. Adjust voice/style, then run the full text.
 - **Chunk long text at sentence boundaries** — never mid-sentence. Mid-sentence cuts produce audible prosody jumps.
