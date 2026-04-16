@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+# rebyte-install-skill — fetch a Rebyte skill bundle and extract it locally.
+#
+# Source of truth lives here in rebyte-skills/bin/. To deploy: copy this file
+# into the agent-sidecar template alongside rebyte-auth so it lands at
+# /home/user/.local/bin/rebyte-install-skill on every provisioned VM.
+#
+# Contract:
+#   Usage:    rebyte-install-skill <slug>
+#   Reads:    $AUTH_TOKEN, $API_URL  (set per relay/prompts/meta.md)
+#   Writes:   $HOME/.skills/<slug>/_SKILL.md  (+ any reference files in the bundle)
+#   Prints:   "Skill installed. Read and follow <absolute path>"  on success
+#   Exits:    0 success, 64 bad input, 65 missing env, 1 runtime failure
+#
+# See cctools/docs/SKILL-ARCHITECTURE.md for the full protocol.
+
+set -euo pipefail
+
+slug="${1:-}"
+
+if [ -z "$slug" ]; then
+  echo "rebyte-install-skill: missing slug argument" >&2
+  echo "Usage: rebyte-install-skill <slug>" >&2
+  exit 64
+fi
+
+# Strict slug validation — no path traversal, no shell metacharacters.
+if ! [[ "$slug" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+  echo "rebyte-install-skill: invalid slug '$slug' (lowercase letters, digits, dashes only)" >&2
+  exit 64
+fi
+
+if [ -z "${AUTH_TOKEN:-}" ]; then
+  echo "rebyte-install-skill: AUTH_TOKEN not set" >&2
+  echo "  Run: AUTH_TOKEN=\$(/home/user/.local/bin/rebyte-auth)" >&2
+  exit 65
+fi
+
+if [ -z "${API_URL:-}" ]; then
+  echo "rebyte-install-skill: API_URL not set" >&2
+  echo "  Derive from /home/user/.rebyte.ai/auth.json (sandbox.relay_url)" >&2
+  exit 65
+fi
+
+skills_dir="$HOME/.skills"
+target="$skills_dir/$slug/_SKILL.md"
+mkdir -p "$skills_dir"
+
+# Use mktemp so concurrent invocations for different (or same) slugs don't
+# clobber each other's bundle download.
+bundle="$(mktemp -t "rebyte-skill-${slug}-XXXXXX")"
+trap 'rm -f "$bundle"' EXIT
+
+# curl -f turns 4xx/5xx into non-zero exit; -s silent; -S still print errors;
+# -L follow the relay's 302 redirect to the signed GCS URL.
+if ! curl -fsSL \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
+  "$API_URL/api/data/skills/$slug" \
+  -o "$bundle"; then
+  echo "rebyte-install-skill: failed to download '$slug' from $API_URL/api/data/skills/$slug" >&2
+  exit 1
+fi
+
+# unzip -o overwrites prior copies; -q suppresses chatter; -d sets the dest.
+if ! unzip -qo "$bundle" -d "$skills_dir"; then
+  echo "rebyte-install-skill: failed to extract bundle for '$slug'" >&2
+  exit 1
+fi
+
+# Sanity-check the contract: the extracted bundle must contain _SKILL.md.
+if [ ! -f "$target" ]; then
+  echo "rebyte-install-skill: bundle for '$slug' did not contain _SKILL.md (expected at $target)" >&2
+  exit 1
+fi
+
+echo "Skill installed. Read and follow $target"

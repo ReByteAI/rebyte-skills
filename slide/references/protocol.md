@@ -40,7 +40,7 @@ Either way, the same two artifacts exist: `index.html` + `NN.png` per slide.
 
 ## Validation Script
 
-Run after EVERY generation or edit. Do NOT output `<rebyte-slide>` until this passes.
+Run after EVERY generation or edit. Fix any `"ok": false` before telling the user the deck is done.
 
 ```bash
 SKILL_DIR="$(dirname "$(readlink -f ~/.skills/rebyteai-slide/SKILL.md)")"
@@ -72,16 +72,6 @@ bash "$SKILL_DIR/scripts/export-pages.sh" /code/slides/{slug}/index.html
 Opens the deck in Chrome, toggles each `<section>` to `.slide--active`, screenshots at 1920x1080. Output: `01.png`, `02.png`, etc.
 
 **If Chrome is unavailable:** warn and skip. PNGs are a deliverable, not a gate.
-
-## The `<rebyte-slide>` Tag
-
-After every successful change + validation, output:
-
-```
-<rebyte-slide path="/code/slides/{slug}/index.html" pages="N" title="Deck title" />
-```
-
-The frontend uses this to refresh the slide editor. **Never output this if validation failed.**
 
 ## INDEX.md
 

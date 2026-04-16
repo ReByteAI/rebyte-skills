@@ -18,10 +18,11 @@ The frontend injects a hint at the top of the user's message when they have a de
 1. **`[editing /code/slides/X/index.html]`** → user is viewing X. Default to X.
 2. **Explicit deck name** in the message → overrides anchor. Look up slug in INDEX.md.
 3. **Single existing deck** + no anchor → use it.
-4. **Multiple decks + ambiguous** → ASK with `<rebyte-slide>` cards:
+4. **Multiple decks + ambiguous** → ASK with a numbered list:
    ```
-   <rebyte-slide path="/code/slides/lexreview-ai-pitch/index.html" pages="8" title="Lexreview AI Pitch" />
-   <rebyte-slide path="/code/slides/q4-business-review/index.html" pages="8" title="Q4 Business Review" />
+   Which deck do you want to edit?
+   1. **Lexreview AI Pitch** — 8 slides (`lexreview-ai-pitch`)
+   2. **Q4 Business Review** — 8 slides (`q4-business-review`)
    ```
 5. **Empty `/code/slides/`** → create a new deck (use outline workflow).
 
@@ -70,7 +71,6 @@ When a user selects an element on an image slide (via `[selected ... bp=img-N]`)
 - Surgical edits — touch only what the user mentioned
 - Preserve `data-page` and `data-bp-id`
 - Update `INDEX.md` after every change
-- Output `<rebyte-slide>` after every change (if validation passes)
 
 ## DON'T
 

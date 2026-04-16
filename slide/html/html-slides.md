@@ -468,11 +468,9 @@ For each page where `ok: false`:
 - Re-run the lint command from step 1
 - **Hard cap: 1 retry per page.** If the second pass still fails, log the remaining issues as known limitations and move on. **Never loop.**
 
-### Step 4 — Emit final reference tag
+### Step 4 — Done
 
-After all pages pass (or retry budget exhausted), emit the final reference tag. This is the existing `<rebyte-slide>` pattern that surfaces the deck card in chat:
-
-    <rebyte-slide path="/code/slides/{slug}/index.html" pages="N" title="Deck title" />
+After all pages pass (or retry budget exhausted), the deck is ready.
 
 ### If Chrome is unreachable
 
@@ -482,5 +480,5 @@ Fresh VMs don't always have Chrome running on `localhost:9222` — the cctools r
 2. If chromium isn't installed at `/usr/bin/chromium`, find it: `which google-chrome google-chrome-stable chromium chromium-browser`
 3. As a final fallback, use `mcp__chrome-devtools__*` tools — they manage their own Chrome lifecycle and can run the same eval logic
 
-If everything fails, print `Warning: DOM lint skipped: Chrome not reachable`, still emit the final `<rebyte-slide>` tag, and exit cleanly. Lint is polish, not a delivery gate.
+If everything fails, print `Warning: DOM lint skipped: Chrome not reachable` and exit cleanly. Lint is polish.
 

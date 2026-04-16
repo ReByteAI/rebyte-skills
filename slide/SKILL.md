@@ -26,7 +26,7 @@ Every deck must satisfy this. Full details + validation script: `references/prot
 **Invariants:**
 - `index.html` has N `<section data-page="1..N">` elements
 - `NN.png` exists for every section — no missing, no extra
-- After every change: run `scripts/validate-protocol.sh`, output `<rebyte-slide>` tag only if it passes
+- After every change: run `scripts/validate-protocol.sh` before continuing
 - Update `/code/INDEX.md` after every create/update/delete
 
 ---
@@ -377,15 +377,9 @@ Show prompt list. Ask same confirm/edit/regenerate question.
 
 **Cleanup**: If deck went from M to N slides (N < M), delete stale `(N+1).png` through `M.png`.
 
-**Validate**: Run `scripts/validate-protocol.sh /code/slides/{slug}/index.html`. MUST pass. Do NOT emit `<rebyte-slide>` if it fails.
+**Validate**: Run `scripts/validate-protocol.sh /code/slides/{slug}/index.html`. MUST pass before you tell the user the deck is done.
 
-**Create `.slide` marker** if not exists: `touch /code/slides/.slide`
-
-### Step 9: Output
-
-```
-<rebyte-slide path="/code/slides/{slug}/index.html" pages="N" title="{title}" />
-```
+### Step 9: Finalize
 
 Update `/code/INDEX.md` with deck info and last-updated date.
 
@@ -406,7 +400,7 @@ Skip the outline. Go straight to surgical edit.
 ├── [selected ... bp=X page=N]       → Edit that specific element
 ├── "add a slide about X"            → Append a <section> to the open deck
 ├── "regenerate slide 3"             → Re-render that page
-└── Ambiguous + multiple decks       → Ask with <rebyte-slide> cards
+└── Ambiguous + multiple decks       → Ask with a numbered list (see editing.md)
 ```
 
 **Mode detection**: Check `index.html` for `slide--image` class → image mode. Otherwise → HTML. If `outline.md` has `Render:` field, use that. Fallback: HTML.
@@ -415,7 +409,7 @@ Skip the outline. Go straight to surgical edit.
 **Image edits**: update prompt in `prompts/`, regenerate via nano-banana, replace `NN.png`. See `image/how-to.md` "Slide Modification" section.
 **Image partial workflows**: `--regenerate N`, `--images-only`. See `image/how-to.md`.
 
-After ANY edit: run `scripts/export-pages.sh` (HTML) or replace PNG (image) → run `scripts/validate-protocol.sh` → output `<rebyte-slide>` only if valid.
+After ANY edit: run `scripts/export-pages.sh` (HTML) or replace PNG (image) → run `scripts/validate-protocol.sh`.
 
 ---
 
@@ -435,7 +429,7 @@ Every file in this skill, with path from this SKILL.md:
 
 | Path | What |
 |------|------|
-| `references/protocol.md` | The contract: file layout, invariants, validation script, `<rebyte-slide>` tag |
+| `references/protocol.md` | The contract: file layout, invariants, validation script |
 | `references/css-patterns.md` | Slide engine CSS, transitions, controls, nav JS — every index.html |
 | `references/slide-template.md` | Base HTML template for index.html |
 | `references/nano-banana.md` | Image generation API: auth, models, parameters, saving |
