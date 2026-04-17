@@ -57,7 +57,7 @@ The skill lives in `video-use/`. User footage lives wherever they put it. All se
 
 ## Setup
 
-- `ELEVENLABS_API_KEY` in `.env` at project root or env. Ask and write `.env` if missing.
+- Transcription uses the relay proxy (`POST $API_URL/api/data/transcribe/transcribe`). Auth from `~/.rebyte.ai/auth.json`. No API key needed in the VM.
 - `ffmpeg` + `ffprobe` on PATH.
 - Python deps: `pip install -e .`.
 - `yt-dlp`, `manim`, Remotion installed only on first use.

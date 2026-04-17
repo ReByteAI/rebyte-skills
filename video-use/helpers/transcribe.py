@@ -1,7 +1,7 @@
-"""Transcribe a video with ElevenLabs Scribe.
+"""Transcribe a video via the relay transcribe proxy.
 
-Extracts mono 16kHz audio via ffmpeg, uploads to Scribe with verbatim +
-diarize + audio events + word-level timestamps, writes the full response
+Extracts mono 16kHz audio via ffmpeg, uploads to the relay's transcribe
+endpoint (which proxies ElevenLabs Scribe), writes the full response
 to <edit_dir>/transcripts/<video_stem>.json.
 
 Cached: if the output file already exists, the upload is skipped.
@@ -27,23 +27,19 @@ from pathlib import Path
 import requests
 
 
-SCRIBE_URL = "https://api.elevenlabs.io/v1/speech-to-text"
+AUTH_JSON = Path.home() / ".rebyte.ai" / "auth.json"
 
 
-def load_api_key() -> str:
-    for candidate in [Path(__file__).resolve().parent.parent / ".env", Path(".env")]:
-        if candidate.exists():
-            for line in candidate.read_text().splitlines():
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                k, v = line.split("=", 1)
-                if k.strip() == "ELEVENLABS_API_KEY":
-                    return v.strip().strip('"').strip("'")
-    v = os.environ.get("ELEVENLABS_API_KEY", "")
-    if not v:
-        sys.exit("ELEVENLABS_API_KEY not found in .env or environment")
-    return v
+def load_auth() -> tuple[str, str]:
+    """Return (api_url, auth_token) from auth.json."""
+    if not AUTH_JSON.exists():
+        sys.exit(f"auth.json not found at {AUTH_JSON}")
+    data = json.loads(AUTH_JSON.read_text())
+    api_url = data.get("api_url")
+    token = data.get("token")
+    if not api_url or not token:
+        sys.exit(f"auth.json missing api_url or token: {AUTH_JSON}")
+    return api_url, token
 
 
 def extract_audio(video_path: Path, dest: Path) -> None:
@@ -55,42 +51,43 @@ def extract_audio(video_path: Path, dest: Path) -> None:
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def call_scribe(
+def call_transcribe(
     audio_path: Path,
-    api_key: str,
+    api_url: str,
+    token: str,
     language: str | None = None,
     num_speakers: int | None = None,
 ) -> dict:
-    data: dict[str, str] = {
-        "model_id": "scribe_v1",
-        "diarize": "true",
-        "tag_audio_events": "true",
-        "timestamps_granularity": "word",
-    }
+    data: dict[str, str] = {}
     if language:
-        data["language_code"] = language
+        data["language"] = language
     if num_speakers:
         data["num_speakers"] = str(num_speakers)
 
     with open(audio_path, "rb") as f:
         resp = requests.post(
-            SCRIBE_URL,
-            headers={"xi-api-key": api_key},
+            f"{api_url}/api/data/transcribe/transcribe",
+            headers={"Authorization": f"Bearer {token}"},
             files={"file": (audio_path.name, f, "audio/wav")},
             data=data,
             timeout=1800,
         )
 
     if resp.status_code != 200:
-        raise RuntimeError(f"Scribe returned {resp.status_code}: {resp.text[:500]}")
+        raise RuntimeError(f"Transcribe proxy returned {resp.status_code}: {resp.text[:500]}")
 
-    return resp.json()
+    body = resp.json()
+    if not body.get("success"):
+        raise RuntimeError(f"Transcribe proxy error: {body.get('message', body)}")
+
+    return body["data"]
 
 
 def transcribe_one(
     video: Path,
     edit_dir: Path,
-    api_key: str,
+    api_url: str,
+    token: str,
     language: str | None = None,
     num_speakers: int | None = None,
     verbose: bool = True,
@@ -118,7 +115,7 @@ def transcribe_one(
         size_mb = audio.stat().st_size / (1024 * 1024)
         if verbose:
             print(f"  uploading {video.stem}.wav ({size_mb:.1f} MB)", flush=True)
-        payload = call_scribe(audio, api_key, language, num_speakers)
+        payload = call_transcribe(audio, api_url, token, language, num_speakers)
 
     out_path.write_text(json.dumps(payload, indent=2))
     dt = time.time() - t0
@@ -133,7 +130,7 @@ def transcribe_one(
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Transcribe a video with ElevenLabs Scribe")
+    ap = argparse.ArgumentParser(description="Transcribe a video via relay proxy")
     ap.add_argument("video", type=Path, help="Path to video file")
     ap.add_argument(
         "--edit-dir",
@@ -160,12 +157,13 @@ def main() -> None:
         sys.exit(f"video not found: {video}")
 
     edit_dir = (args.edit_dir or (video.parent / "edit")).resolve()
-    api_key = load_api_key()
+    api_url, token = load_auth()
 
     transcribe_one(
         video=video,
         edit_dir=edit_dir,
-        api_key=api_key,
+        api_url=api_url,
+        token=token,
         language=args.language,
         num_speakers=args.num_speakers,
     )
