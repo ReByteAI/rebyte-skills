@@ -1,4 +1,5 @@
 ---
+version: 1
 name: speech-to-text
 description: Transcribe audio to text using OpenAI Whisper. Use when user wants to convert speech to text, transcribe audio files, generate subtitles, or extract text from recordings. Triggers include "speech to text", "STT", "transcribe", "transcription", "subtitles", "captions", "audio to text", "convert audio to text".
 ---

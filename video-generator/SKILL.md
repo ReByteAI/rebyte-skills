@@ -1,4 +1,5 @@
 ---
+version: 1
 name: video-generator
 description: Professional AI video production workflow. Use when creating videos, short films, commercials, or any video content using AI generation tools.
 ---

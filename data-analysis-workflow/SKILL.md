@@ -1,4 +1,5 @@
 ---
+version: 1
 name: data-analysis-workflow
 description: Gather, clean, analyze, and visualize data from the web or uploaded files. Use when user wants to scrape data, analyze datasets, create charts, find trends, compare metrics, build dashboards, or generate data-driven reports. Triggers include "analyze data", "scrape and analyze", "create dashboard", "find trends", "compare metrics", "data visualization", "statistical analysis", "correlation analysis", "build chart", "data report".
 ---

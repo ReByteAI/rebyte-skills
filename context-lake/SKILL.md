@@ -1,4 +1,5 @@
 ---
+version: 1
 name: context-lake
 description: Access and manage structured data. Query your organization's connected databases, files, and services. Import your own CSV/Parquet/JSON files as queryable SQL tables. Build views that join across sources. All data is queryable via standard SQL.
 ---

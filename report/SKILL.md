@@ -1,4 +1,5 @@
 ---
+version: 1
 name: report
 description: Create beautiful editorial reports as magazine-style HTML documents rendered inline in chat. Pretext-powered hero typography with text wrapping around decorations, multi-column body, pull quotes, stat callouts, and figures. Uses the widget aesthetic system. Triggers include "create a report", "write a report", "format as a report", "magazine layout", "editorial report", "formatted analysis", "beautiful document", "publish-quality report", "research report", "analysis brief".
 ---

@@ -1,4 +1,5 @@
 ---
+version: 1
 name: video-generation
 description: Generate videos from text prompts or images using Google Veo via Rebyte data API. Use for text-to-video generation or image-to-video animation. Triggers include "generate video", "create video", "make a video", "animate", "video of", "text to video", "image to video", "video generation".
 ---

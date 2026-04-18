@@ -1,4 +1,5 @@
 ---
+version: 1
 name: second-brain
 description: Workspace structure convention for Agent Computer. Establishes raw/ (user materials, read-only), content directories (AI-maintained), and output/ (deliverables). Use as a sub-skill in workflow skills that need structured file organization. Inspired by Karpathy's LLM Knowledge Base model.
 ---

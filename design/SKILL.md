@@ -1,4 +1,5 @@
 ---
+version: 1
 name: design
 description: Create and refine visual designs — logos, brand assets, UI mockups, illustrations, interactive artifacts — using AI image generation, design intelligence, and impeccable.style design skills for professional polish. Use when user wants to design a logo, create brand assets, build UI mockups, generate illustrations, or create and refine interactive visual artifacts.
 ---

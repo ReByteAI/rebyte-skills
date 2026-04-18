@@ -1,4 +1,5 @@
 ---
+version: 1
 name: wiki-workflow
 description: Build and maintain a personal LLM-native wiki — a structured, interlinked collection of markdown notes that grows over time. Use when the user wants to build a knowledge base, second brain, personal wiki, or notes system; or asks to "ingest" a document/article/URL, "ask my notes a question", "look up what I know about X", or "tidy up my wiki". Inspired by Karpathy's LLM Wiki pattern and disksing/db9-wiki, adapted for the persistent local filesystem in Agent Computer VMs.
 ---

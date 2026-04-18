@@ -1,4 +1,5 @@
 ---
+version: 1
 name: research-workflow
 description: Conduct comprehensive research and produce a professional research report as PDF. Use when user wants in-depth research on any topic — market analysis, technology comparisons, industry trends, academic topics, competitive intelligence, or any question requiring multi-source synthesis. Triggers include "research", "investigate", "analyze", "write a report on", "deep dive into", "comprehensive analysis of", "what do we know about".
 ---

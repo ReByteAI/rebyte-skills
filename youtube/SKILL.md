@@ -1,4 +1,5 @@
 ---
+version: 1
 name: youtube
 description: Access YouTube data - channels, videos, search, and transcripts. Use when user needs YouTube channel info, video listings, search results, or video transcripts. Triggers include "youtube", "youtube channel", "youtube video", "video transcript", "youtube search", "channel videos", "latest videos from".
 ---

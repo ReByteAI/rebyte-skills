@@ -1,4 +1,5 @@
 ---
+version: 1
 name: podcast
 description: Research a topic and produce a podcast episode with AI-generated voices. Use when user wants to create a podcast, audio episode, narrated discussion, or audio content from a topic or document. Triggers include "create a podcast", "make a podcast episode", "podcast about", "audio episode", "narrated discussion", "turn this into a podcast".
 ---

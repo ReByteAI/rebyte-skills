@@ -1,4 +1,5 @@
 ---
+version: 1
 name: slide
 description: Professional slide creating, polish. The slides app at /code/slides/. Create, iterate, and publish HTML or image decks. Each {slug}/ folder is a deck, the code agent is the app's runtime user.
 ---

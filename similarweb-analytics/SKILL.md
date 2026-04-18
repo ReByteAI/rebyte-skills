@@ -1,4 +1,5 @@
 ---
+version: 1
 name: similarweb-analytics
 description: "Analyze websites and domains using SimilarWeb traffic data. Get traffic metrics, engagement stats, global rankings, traffic sources, and geographic distribution for comprehensive website research."
 ---

@@ -1,4 +1,5 @@
 ---
+version: 1
 name: form-workflow
 description: Build forms, surveys, quizzes, and registration pages with multi-step flows, conditional logic, and response collection. Use when user wants to create a form, survey, questionnaire, quiz, signup flow, feedback form, or registration page. Triggers include "create form", "build survey", "make questionnaire", "registration form", "feedback form", "signup flow", "quiz", "typeform", "multi-step form".
 ---

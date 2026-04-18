@@ -1,4 +1,5 @@
 ---
+version: 1
 name: docx
 description: Process, create, convert, and analyze documents — PDFs, Word docs, spreadsheets, and more. Use when user wants to extract data from PDFs, create Word documents, merge or split PDFs, convert between formats, analyze spreadsheet data, or process uploaded files. Triggers include "extract from PDF", "create Word document", "merge PDFs", "convert document", "analyze spreadsheet", "OCR this scan", "extract tables", "create template", "process invoice".
 ---

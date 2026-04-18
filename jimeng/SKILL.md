@@ -1,4 +1,5 @@
 ---
+version: 1
 name: jimeng
 description: Generate images from text prompts using ByteDance Jimeng (Seedream) via Rebyte data API. High-quality image generation with up to 4K resolution. Triggers include "generate image", "create image", "make a picture", "draw", "illustrate", "image of", "picture of", "jimeng", "seedream", "instant dream".
 ---

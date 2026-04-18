@@ -1,4 +1,5 @@
 ---
+version: 1
 name: team-skill-workflow
 description: Create and publish a custom skill for your team. Use when user wants to create a team skill, build a private skill, make a skill for the organization, or publish a skill to the team store. Triggers include "create a team skill", "build a skill for my team", "make a custom skill", "create and publish a skill", "new team skill".
 ---

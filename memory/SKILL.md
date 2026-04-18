@@ -1,4 +1,5 @@
 ---
+version: 1
 name: memory
 description: Persistent memory system. Save facts, search saved memories, and recall past task conversations with full prompt and result. Use at the start of every task to recall context, and at the end to save learnings.
 ---

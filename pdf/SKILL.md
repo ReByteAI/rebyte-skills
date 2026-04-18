@@ -1,4 +1,5 @@
 ---
+version: 1
 name: pdf
 description: Use this skill whenever the user wants to do anything with PDF files. This includes creating professional PDF documents (reports, articles, white papers) with themed styling and CJK support, reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, filling PDF forms, encrypting/decrypting PDFs, extracting images, and OCR on scanned PDFs to make them searchable. If the user mentions a .pdf file, asks to produce one, wants a "professionally formatted" document, or says "转PDF" or "生成报告", use this skill.
 license: Proprietary. LICENSE.txt has complete terms

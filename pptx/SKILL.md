@@ -1,4 +1,5 @@
 ---
+version: 1
 name: pptx
 description: "Generate, edit, and read PowerPoint (.pptx) files. Create from scratch with PptxGenJS, edit existing PPTX via XML workflows, or extract text with markitdown. Triggers: PPT, PPTX, PowerPoint."
 ---

@@ -1,4 +1,5 @@
 ---
+version: 1
 name: show-me-how
 description: Create interactive HTML widgets, charts, dashboards, and visual explainers rendered inline in chat. Use when user needs interactive visualizations, data exploration tools, calculators, or visual explanations. Triggers include "show me how", "visualize", "interactive chart", "make a widget", "show me how X works", "build a calculator", "create a dashboard", "interactive explainer", "explore this data", "chart this", "graph", "plot".
 ---

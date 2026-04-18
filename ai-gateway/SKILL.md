@@ -1,4 +1,5 @@
 ---
+version: 1
 name: ai-gateway
 description: Add AI/LLM capabilities to deployed applications. Provision an API key for your deployment to access OpenAI-compatible endpoints (GPT, Claude, Gemini) with usage billed to your organization.
 ---

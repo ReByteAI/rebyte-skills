@@ -1,4 +1,5 @@
 ---
+version: 1
 name: internet-search
 description: Search the internet for information. Use when you need to find current information, research topics, look up documentation, or verify facts. Triggers include "search the web", "search internet", "look up", "find information", "google", "web search", "search for".
 ---

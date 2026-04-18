@@ -1,4 +1,5 @@
 ---
+version: 1
 name: embed-assets
 description: Embed images, audio, and other assets into a single HTML file using base64 data URIs. Use when building self-contained HTML widgets or pages that need inline media. Triggers include "embed image", "embed audio", "inline asset", "base64 embed", "self-contained HTML", "single-file HTML with media".
 ---

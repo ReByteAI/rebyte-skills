@@ -1,4 +1,5 @@
 ---
+version: 1
 name: dynamodb-database
 description: Provision DynamoDB NoSQL database for web apps. Use for key-value storage, document storage, high-performance NoSQL. Triggers include "DynamoDB", "NoSQL", "key-value store", "document database".
 ---

@@ -1,4 +1,5 @@
 ---
+version: 1
 name: slide-builder
 description: Create presentations using Slidev (Markdown-based slides). Triggers include "create presentation", "make slides", "build slides", "slide deck", "tech talk", "conference slides", "pitch deck". Handles the full workflow from content planning to deployment at rebyte.pro.
 ---

@@ -1,4 +1,5 @@
 ---
+version: 1
 name: stock-analysis
 description: "Comprehensive stock and company analysis with real market data. Covers price history, technical analysis, company research, news sentiment, SEC filings, insider trading, and multi-stock comparison. Use when user mentions stock tickers, asks about stock prices, company analysis, investment research, or financial data. Triggers: stock symbol (AAPL, TSLA), 'stock price', 'analyze stock', 'compare stocks', 'company financials', 'insider trading', 'SEC filing', 'is X a good buy', 'stock chart', 'price history'. Do NOT use for full-blown multi-source research reports (use financial-deep-research instead)."
 ---

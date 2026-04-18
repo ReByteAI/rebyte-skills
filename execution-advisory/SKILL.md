@@ -1,4 +1,5 @@
 ---
+version: 1
 name: execution-advisory
 description: Pair a fast/cheap executor (Haiku, Sonnet, Flash, opencode) with occasional consultations to a high-intelligence advisor (Claude Opus, Gemini 3.1 Pro) when you hit a hard decision point. The advisor runs as a real sub-agent via /api/sub-agent/invoke and returns a plan you continue with. Install when you want near-frontier intelligence at executor-level cost — especially for long-horizon tasks where most turns are mechanical but a few require strong reasoning. Trigger phrases include "advisor", "consult opus", "second opinion from a smarter model", "save tokens with advisor pattern", "stuck on a hard decision".
 ---

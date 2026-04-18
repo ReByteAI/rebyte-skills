@@ -1,4 +1,5 @@
 ---
+version: 1
 name: nanoppt
 description: Generate stylized presentation slide images using Nano Banana AI. Converts article content to ASCII framework then generates AI images for each slide. Triggers include "nanoppt", "stylized slides", "AI slide images", "presentation images", "Doraemon style slides", "anime presentation". Do NOT use for regular presentations (use slide instead).
 ---

@@ -1,4 +1,5 @@
 ---
+version: 1
 name: sqlite-database
 description: Provision cloud SQLite databases for web apps. Use when an app needs a database, persistent storage, or backend data. Triggers include "add a database", "need storage", "store data", "save to database", "SQLite", "database".
 ---

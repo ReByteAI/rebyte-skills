@@ -1,4 +1,5 @@
 ---
+version: 1
 name: google-workspace-workflow
 description: Google Workspace workflow for Drive, Docs, Sheets, Gmail, Calendar. Supports two modes - CLI (gws with service account or access token) and Browser (sync Google session via Browser Sync, then automate with Chrome DevTools MCP). Ask the user which method they prefer.
 ---

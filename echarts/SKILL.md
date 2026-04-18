@@ -1,4 +1,5 @@
 ---
+version: 1
 name: echarts
 description: Create interactive charts and data visualizations using pyecharts (Python) and Apache ECharts. Use when user needs charts, graphs, or data visualizations rendered as HTML. Triggers include "create chart", "make a graph", "visualize data", "bar chart", "line chart", "pie chart", "scatter plot", "heatmap", "data visualization", "plot this data", "chart this". Do NOT use for static images or matplotlib-style charts.
 ---

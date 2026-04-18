@@ -1,4 +1,5 @@
 ---
+version: 1
 name: form-builder
 description: Build stylish, Typeform-like multi-step forms and surveys using the Rebyte Forms library (Composer API). Outputs standalone HTML files. Triggers include "create a form", "build a survey", "make a questionnaire", "feedback form", "contact form", "signup form", "onboarding flow", "multi-step form", "typeform-style", "data collection form". Do NOT use for simple single-field inputs or backend form processing.
 ---

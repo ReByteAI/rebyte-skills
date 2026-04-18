@@ -1,4 +1,5 @@
 ---
+version: 1
 name: learn-anything
 description: Turn any material into interactive learning slides — codebases, documents, PDFs, earnings reports, research papers, articles, textbooks, URLs. Produces a self-contained HTML slide deck you can navigate like PowerPoint. Triggers include "learn this", "explain this", "teach me", "turn this into slides", "make this understandable", "help me learn", "break this down", "study guide".
 ---

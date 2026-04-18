@@ -1,4 +1,5 @@
 ---
+version: 1
 name: repo-hunter
 description: >
   Search GitHub for battle-tested solutions instead of reinventing the wheel. Use when

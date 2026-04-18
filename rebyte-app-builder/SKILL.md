@@ -1,4 +1,5 @@
 ---
+version: 1
 name: rebyte-app-builder
 description: Deploy web applications to Rebyte Cloud — a managed deployment platform (like Vercel). Supports Node.js SSR frameworks (auto-detect), static sites, Python, Go, and Rust backends. Deploys via `rebyte deploy` with zero configuration for Node.js, or via `rebyte.json` for other languages.
 ---

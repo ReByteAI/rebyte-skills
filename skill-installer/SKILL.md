@@ -1,4 +1,5 @@
 ---
+version: 1
 name: skill-installer
 description: Search and install open-source skills from community GitHub repositories. Use when users ask to find, discover, or install skills/plugins for specific tasks, domains, or workflows.
 ---

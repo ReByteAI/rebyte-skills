@@ -1,4 +1,5 @@
 ---
+version: 1
 name: image-workflow
 description: Generate images from text descriptions or edit existing images using AI. Use when user wants to create logos, illustrations, product photos, social media graphics, concept art, or edit/transform uploaded images. Triggers include "generate image", "create logo", "make illustration", "product photo", "social media graphic", "concept art", "edit image", "transform photo", "style transfer", "image to image", "remove background".
 ---

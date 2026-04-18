@@ -1,4 +1,5 @@
 ---
+version: 1
 name: cloud-schedule
 description: "ReClaw/Zeroclaw-only: create, list, update, and delete scheduled tasks. Only works with the ReClaw (Zeroclaw) agent via messaging channels (Telegram, Slack, etc.). Does NOT work with Claude Code, Codex, Rebyte Code, or other coding agents — those should set schedules in the UI instead."
 ---

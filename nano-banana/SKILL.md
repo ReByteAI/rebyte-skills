@@ -1,4 +1,5 @@
 ---
+version: 1
 name: nano-banana
 description: Generate images from text prompts or edit existing images using Google Nano Banana 2 (Gemini 3.1 Flash image generation) via Rebyte data API. Supports multi-size output (512px–4K), improved text rendering, and multi-image input. Use for text-to-image generation or image-to-image editing/enhancement. Triggers include "generate image", "create image", "make a picture", "draw", "illustrate", "image of", "picture of", "edit image", "modify image", "enhance image", "style transfer", "nano banana".
 ---

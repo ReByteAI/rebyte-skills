@@ -1,4 +1,5 @@
 ---
+version: 1
 name: gws-best-practices
 description: Best practices for using the gws CLI with supported Google Workspace services (Drive, Docs, Sheets, Slides). Use when performing any operation with the gws CLI.
 ---
