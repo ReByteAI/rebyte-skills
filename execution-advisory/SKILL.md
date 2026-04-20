@@ -58,9 +58,11 @@ Each advisor is a full sub-agent — it can read files, run tools, and explore. 
 
 The sub-agent endpoint is documented in your base system prompt under "Calling Other Agents". This skill just gives you the presets to plug into it.
 
-Shell helper (paste once at the top of your workflow, then reuse):
+Shell helper (paste once at the top of your workflow, then reuse). Source the task-context env file first so `$REBYTE_TASK_ID` and `$REBYTE_PROMPT_ID` are available:
 
 ```bash
+source /home/user/.rebyte.ai/context.env
+
 advise() {
   # Usage: advise <preset> "<question>"
   # preset: opus | gemini
