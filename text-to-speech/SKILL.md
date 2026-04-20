@@ -1,5 +1,5 @@
 ---
-version: 1
+version: 2
 name: text-to-speech
 description: Convert text to speech audio. Picks from a catalog of OpenAI (gpt-audio) and Gemini voices. Supports style/prosody control — natural language directions for Gemini voices, "instructions" field for OpenAI voices. Use when user wants voiceovers, narration, audio for videos, multi-voice dialogue, expressive or whispered speech.
 ---
