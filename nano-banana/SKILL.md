@@ -1,22 +1,23 @@
 ---
-version: 1
+version: 2
 name: nano-banana
-description: Generate images from text prompts or edit existing images using Google Nano Banana 2 (Gemini 3.1 Flash image generation) via Rebyte data API. Supports multi-size output (512px–4K), improved text rendering, and multi-image input. Use for text-to-image generation or image-to-image editing/enhancement. Triggers include "generate image", "create image", "make a picture", "draw", "illustrate", "image of", "picture of", "edit image", "modify image", "enhance image", "style transfer", "nano banana".
+description: Generate images from text prompts or edit existing images via Rebyte data API. Two backends selectable via the `provider` field — `gemini` (default, Nano Banana 2 / Gemini 3.1 Flash) or `gpt` (OpenAI gpt-image-2). Gemini is best for multi-aspect-ratio output (512px–4K) and fast multi-image edits; gpt-image-2 is best for high-fidelity photorealism and precise text rendering. Supports text-to-image and image-to-image on both. Triggers include "generate image", "create image", "make a picture", "draw", "illustrate", "image of", "picture of", "edit image", "modify image", "enhance image", "style transfer", "nano banana", "gpt image".
 ---
 
-# Nano Banana 2 - Image Generation API
+# Image Generation API (Nano Banana 2 + GPT Image 2)
 
-Generate images from text prompts or edit existing images using Google Nano Banana 2 (Gemini 3.1 Flash — `gemini-3.1-flash-image-preview`).
+Generate or edit images via a single endpoint `POST $API_URL/api/data/images/generate`. Choose the backend via the `provider` field:
 
-**Key capabilities:**
-- Multi-size output: 512px, 1K, 2K, 4K
-- Improved text rendering
-- Multi-image input for editing and style transfer
-- Multiple aspect ratios (1:1, 16:9, 9:16, etc.)
+| `provider` | Model | Best For |
+|------------|-------|----------|
+| `gemini` (default) | `gemini-3.1-flash-image-preview` (Nano Banana 2) | Multi-aspect-ratio output, 512px–4K, fast iterations, multi-image editing |
+| `gpt` | `gpt-image-2` (OpenAI) | High-fidelity photorealism, precise text rendering, transparent-mode fine control |
+
+Both providers support text-to-image and image-to-image (image-to-image is triggered by supplying the `image` field as base64).
 
 **Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
 
-## Text-to-Image Generation
+## Gemini (default provider) — Text-to-Image
 
 Create an image from a text description.
 
@@ -33,7 +34,7 @@ curl -X POST "$API_URL/api/data/images/generate" \
 
 ---
 
-## Image-to-Image Generation
+## Gemini — Image-to-Image
 
 Edit, enhance, or transform an existing image by providing it as base64.
 
@@ -56,15 +57,87 @@ curl -X POST "$API_URL/api/data/images/generate" \
 
 ---
 
+## GPT Image 2 (provider: "gpt")
+
+Use OpenAI's `gpt-image-2` for state-of-the-art photorealism and text rendering. Pass `"provider": "gpt"` to switch backends. Both text-to-image and image-to-image are supported.
+
+### Cost guide — pick `quality` deliberately
+
+This endpoint spends user credits. The gpt-image-2 backend is token-priced, so credits scale with `quality`:
+
+| Call | Credits charged (1 credit = $0.01) |
+|------|-----------------------------------|
+| `provider: 'gemini'` (any) | **10** ($0.10) |
+| `provider: 'gpt'`, `quality: 'low'` | **10** ($0.10) |
+| `provider: 'gpt'`, `quality: 'medium'` or `'auto'` | **15** ($0.15) |
+| `provider: 'gpt'`, `quality: 'high'` | **25** ($0.25) |
+
+**Rules of thumb:**
+- **Default to Gemini** for most image needs — it's cheaper and covers aspect ratios up to 4K.
+- **Only use `provider: 'gpt'`** when the user specifically needs photorealism, precise text rendering in the image, or a layout gpt-image-2 handles better.
+- **Only use `quality: 'high'`** for final deliverables (e.g. a single hero image), never for drafts, iterations, or batches. For iteration, use `quality: 'medium'` or `'low'`.
+- If the user hasn't specified quality, omit it (= `auto` = medium tier). Don't upgrade to `'high'` unprompted.
+
+### Text-to-image
+
+```bash
+curl -X POST "$API_URL/api/data/images/generate" \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "gpt",
+    "prompt": "A minimalist poster reading \"HELLO WORLD\" in bold serif type, cream background",
+    "size": "1024x1536",
+    "quality": "high",
+    "outputFormat": "png"
+  }'
+```
+
+### Image-to-image (edits)
+
+```bash
+curl -X POST "$API_URL/api/data/images/generate" \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "gpt",
+    "prompt": "Replace the sky with a vivid aurora; keep the foreground untouched",
+    "image": "<base64-encoded-image>",
+    "imageMimeType": "image/png",
+    "quality": "high"
+  }'
+```
+
+---
+
 ## Parameters
+
+### Shared (all providers)
 
 | Name | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
+| `provider` | string | No | `gemini` | `gemini` or `gpt` |
 | `prompt` | string | Yes | - | Text description or editing instructions |
-| `image` | string | No | - | Base64-encoded source image (for image-to-image) |
+| `image` | string | No | - | Base64-encoded source image (triggers image-to-image) |
 | `imageMimeType` | string | No | `image/png` | MIME type: `image/png`, `image/jpeg`, `image/webp` |
+
+### Gemini-only
+
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
 | `aspectRatio` | string | No | `1:1` | Output aspect ratio |
 | `imageSize` | string | No | `1K` | Output size: `512`, `1K`, `2K`, or `4K` |
+
+### GPT-only
+
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `size` | string | No | `auto` | `1024x1024`, `1024x1536`, `1536x1024`, or `auto` |
+| `quality` | string | No | `auto` | `low`, `medium`, `high`, or `auto` |
+| `outputFormat` | string | No | `png` | `png`, `webp`, or `jpeg` |
+| `background` | string | No | `auto` | `opaque` or `auto` (gpt-image-2 does not support transparent) |
+| `moderation` | string | No | `auto` | `auto` or `low` (less restrictive filtering) |
+| `n` | number | No | `1` | Images to request (response still normalises to the first image) |
 
 **Aspect Ratios:**
 
@@ -100,7 +173,9 @@ curl -X POST "$API_URL/api/data/images/generate" \
     "mimeType": "image/png",
     "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
   },
-  "description": "A vibrant futuristic cityscape..."
+  "description": "A vibrant futuristic cityscape...",
+  "provider": "gemini",
+  "model": "gemini-3.1-flash-image-preview"
 }
 ```
 
@@ -109,7 +184,9 @@ curl -X POST "$API_URL/api/data/images/generate" \
 | `image.base64` | Base64-encoded image data |
 | `image.mimeType` | Image MIME type (typically `image/png`) |
 | `image.dataUrl` | Ready-to-use data URL for HTML/CSS |
-| `description` | Model's description of the generated image |
+| `description` | Model's description (gemini) or revised_prompt (gpt); may be null |
+| `provider` | `gemini` or `gpt` — the backend that served this request |
+| `model` | Exact model snapshot used |
 
 ---
 
@@ -132,21 +209,20 @@ HEADERS = {"Authorization": f"Bearer {AUTH_TOKEN}"}
 def generate_image(
     prompt: str,
     image_path: str = None,
-    aspect_ratio: str = "1:1",
-    image_size: str = "1K"
+    provider: str = "gemini",
+    **kwargs,
 ) -> dict:
-    """Generate an image from text, or edit an existing image."""
-    payload = {
-        "prompt": prompt,
-        "aspectRatio": aspect_ratio,
-        "imageSize": image_size
-    }
+    """Generate an image from text, or edit an existing image.
 
-    # Add source image for image-to-image
+    kwargs are passed through as-is — use gemini keys (aspectRatio, imageSize)
+    or gpt keys (size, quality, outputFormat, background, moderation, n).
+    """
+    payload = {"prompt": prompt, "provider": provider, **kwargs}
+
+    # Add source image for image-to-image (both providers)
     if image_path:
         image_data = Path(image_path).read_bytes()
         payload["image"] = base64.b64encode(image_data).decode()
-        # Detect mime type from extension
         ext = Path(image_path).suffix.lower()
         mime_map = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp'}
         payload["imageMimeType"] = mime_map.get(ext, 'image/png')
@@ -167,27 +243,38 @@ def save_image(result: dict, filepath: str) -> None:
     else:
         print(f"Error: {result.get('error', 'Unknown error')}")
 
-# Example 1: Text-to-image
+# Example 1: Gemini text-to-image (default provider)
 result = generate_image(
     prompt="A serene mountain landscape at dawn with mist in the valley",
-    aspect_ratio="16:9"
+    aspectRatio="16:9",
 )
 save_image(result, "landscape.png")
 
-# Example 2: Image-to-image (style transfer)
+# Example 2: Gemini image-to-image (style transfer)
 result = generate_image(
     prompt="Transform this into a watercolor painting",
     image_path="photo.jpg",
-    image_size="2K"
+    imageSize="2K",
 )
 save_image(result, "watercolor.png")
 
-# Example 3: High-resolution output
+# Example 3: GPT Image 2 text-to-image — high-fidelity text rendering
 result = generate_image(
-    prompt="A detailed botanical illustration of a rose",
-    image_size="4K"
+    prompt='A minimalist poster reading "HELLO WORLD" in bold serif, cream background',
+    provider="gpt",
+    size="1024x1536",
+    quality="high",
 )
-save_image(result, "rose_4k.png")
+save_image(result, "poster.png")
+
+# Example 4: GPT Image 2 image-to-image (edits)
+result = generate_image(
+    prompt="Replace the sky with a vivid aurora; keep the foreground untouched",
+    image_path="photo.jpg",
+    provider="gpt",
+    quality="high",
+)
+save_image(result, "aurora.png")
 ```
 
 ---
