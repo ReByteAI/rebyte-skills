@@ -1,5 +1,5 @@
 ---
-version: 1
+version: 2
 name: pdf
 description: Use this skill for anything PDF — creating professional PDFs (resumes, one-pagers, white papers, letters, portfolios, equity reports, changelogs, custom documents) with the Kami design system; reading or extracting text/tables; merging, splitting, rotating, watermarking, encrypting; filling PDF forms; extracting embedded images; OCR on scanned PDFs. Trigger on any `.pdf` request or phrases like "make me a PDF", "generate a report", "build me a resume", "one-pager", "white paper", "export to PDF", "professional document".
 license: Skill code proprietary. Bundled design system adapted from tw93/kami (MIT) — see KAMI_LICENSE.txt. Bundled fonts (TsangerJinKai02, JetBrainsMono) have their own upstream licenses; see references/create.md for details.
