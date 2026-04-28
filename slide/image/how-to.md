@@ -27,6 +27,7 @@ How to generate entire slides as images via nano-banana. Each slide is one 16:9 
 | `scientific` | clean + cool + technical + dense | Biology, chemistry, medical |
 | `vector-illustration` | clean + vibrant + humanist + balanced | Creative, children's content |
 | `vintage` | paper + warm + editorial + balanced | Historical, heritage |
+| `watercolor-sketch` | clean + cool + handwritten + balanced | Product design, engineering workflows |
 
 Full preset specs: `styles/*.md`
 
@@ -62,6 +63,7 @@ Full dimension specs: `dimensions/*.md`. Preset→dimension mapping: `dimensions
 | biology, chemistry, medical, scientific | `scientific` |
 | history, heritage, vintage, expedition | `vintage` |
 | lifestyle, wellness, travel, artistic | `watercolor` |
+| product design, engineering, blueprint sketch, Apple, Tesla, industrial | `watercolor-sketch` |
 | Default | `blueprint` |
 
 ### Custom Dimension Questions (Round 2)

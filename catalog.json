@@ -63,10 +63,6 @@
       "description": "Best practices for using the gws CLI with supported Google Workspace services (Drive, Docs, Sheets, Slides). Use when performing any operation with the gws CLI."
     },
     {
-      "name": "image-workflow",
-      "description": "Generate images from text descriptions or edit existing images using AI. Use when user wants to create logos, illustrations, product photos, social media graphics, concept art, or edit/transform uploaded images. Triggers include \"generate image\", \"create logo\", \"make illustration\", \"product photo\", \"social media graphic\", \"concept art\", \"edit image\", \"transform photo\", \"style transfer\", \"image to image\", \"remove background\"."
-    },
-    {
       "name": "internet-search",
       "description": "Search the internet for information. Use when you need to find current information, research topics, look up documentation, or verify facts. Triggers include \"search the web\", \"search internet\", \"look up\", \"find information\", \"google\", \"web search\", \"search for\"."
     },
@@ -79,8 +75,8 @@
       "description": "Persistent memory system. Save facts, search saved memories, and recall past task conversations with full prompt and result. Use at the start of every task to recall context, and at the end to save learnings."
     },
     {
-      "name": "nano-banana",
-      "description": "Generate images from text prompts or edit existing images using Google Nano Banana 2 (Gemini 3.1 Flash image generation) via Rebyte data API. Supports multi-size output (512px–4K), improved text rendering, and multi-image input. Use for text-to-image generation or image-to-image editing/enhancement. Triggers include \"generate image\", \"create image\", \"make a picture\", \"draw\", \"illustrate\", \"image of\", \"picture of\", \"edit image\", \"modify image\", \"enhance image\", \"style transfer\", \"nano banana\"."
+      "name": "image-generation",
+      "description": "Generate images from text prompts or edit existing images via Rebyte data API. Two backends: Gemini (Nano Banana 2, default) for multi-aspect-ratio output and fast iterations, or GPT Image 2 (OpenAI) for high-fidelity photorealism and precise text rendering. Triggers include \"generate image\", \"create image\", \"make a picture\", \"draw\", \"illustrate\", \"image of\", \"picture of\", \"edit image\", \"modify image\", \"enhance image\", \"gpt image\"."
     },
     {
       "name": "nanoppt",
