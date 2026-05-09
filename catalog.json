@@ -159,6 +159,10 @@
       "description": "Create and publish a custom skill for your team. Use when user wants to create a team skill, build a private skill, make a skill for the organization, or publish a skill to the team store. Triggers include \"create a team skill\", \"build a skill for my team\", \"make a custom skill\", \"create and publish a skill\", \"new team skill\"."
     },
     {
+      "name": "text-to-music",
+      "description": "Generate music from text (and optionally a reference image) using Google Lyria 3 via Rebyte data API. Two models — `lyria-3` for fast 30-second clips, `lyria-3-pro` for full songs up to ~3 minutes with structural awareness (intro/verse/chorus/bridge). 44.1 kHz stereo MP3 or WAV. Pass an `image` to condition mood/genre on a visual. Use for soundtracks, jingles, intro/outro music, ambient beds, podcast theme music, image-to-music, or any text-to-music task. Triggers include \"generate music\", \"create a song\", \"make a soundtrack\", \"compose music\", \"background music\", \"jingle\", \"theme song\", \"music from prompt\", \"text to music\", \"image to music\", \"music from image\", \"AI music\"."
+    },
+    {
       "name": "text-to-speech",
       "description": "Convert text to speech using a voice catalog spanning OpenAI and Gemini. Supports style/prosody control — \"instructions\" field for OpenAI gpt-4o-mini-tts voices, inline bracket tags like [whispered] for Gemini voices. Use for voiceovers, narration, expressive or whispered speech, mid-sentence tone shifts, accent switching, audio for videos."
     },
