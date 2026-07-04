@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Chart</title>
+<script src="https://unpkg.com/lightweight-charts@5.0.7/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  :root {
+    --paper: #faf7f2; --ink: #1a1a1a; --accent: #1e3a5f;
+    --muted: #6b6b6b; --border: #e3ddd2; --card: #ffffff;
+    --up: #1f7a5c; --down: #b4443c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 28px 32px; background: var(--paper); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    max-width: 1100px; margin-inline: auto;
+  }
+  h1 { font-family: Georgia, "Songti SC", serif; color: var(--accent); font-size: 26px; margin: 0 0 4px; font-weight: 600; }
+  .subtitle { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+  #chart-wrap { position: relative; border: 1px solid var(--border); border-radius: 10px; background: var(--card); padding: 8px; }
+  #chart { width: 100%; height: 560px; }
+  #legend {
+    position: absolute; top: 14px; left: 16px; z-index: 10; pointer-events: none;
+    font-size: 12px; line-height: 1.7; font-variant-numeric: tabular-nums;
+    background: rgba(255,255,255,0.85); border-radius: 6px; padding: 4px 8px;
+  }
+  #legend .row { display: flex; gap: 8px; align-items: baseline; }
+  #legend .name { color: var(--muted); }
+  #legend .val { font-weight: 600; }
+  .footer { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .footer h2 { font-size: 13px; margin: 0 0 6px; color: var(--ink); }
+  .footer ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
+  .asof { margin-top: 10px; color: var(--muted); font-size: 12px; font-style: italic; }
+  .error { padding: 40px; text-align: center; color: var(--down); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ CHART SPEC — the ONLY block the agent edits ══════════════
+  dataUrl: sibling JSON file in the same directory (same-origin fetch).
+  panes:   first pane is the main chart; each pane gets a stretch weight.
+  series:  type = candlestick | line | area | histogram | markers
+           data = key into the data JSON.
+  Colors are optional — sensible defaults applied per type/index.
+-->
+<script id="chart-spec" type="application/json">
+{
+  "title": "Sample — replace me",
+  "subtitle": "Replace this spec block and write the sibling data JSON.",
+  "dataUrl": "./sample-data.json",
+  "panes": [
+    {
+      "stretch": 3,
+      "series": [
+        { "type": "candlestick", "data": "ohlc", "title": "Price" },
+        { "type": "line", "data": "sma20", "title": "SMA 20" },
+        { "type": "markers", "data": "trades", "attachTo": "ohlc" }
+      ]
+    },
+    { "stretch": 1, "series": [ { "type": "histogram", "data": "volume", "title": "Volume" } ] }
+  ],
+  "notes": [],
+  "asOf": ""
+}
+</script>
+
+<h1 id="title"></h1>
+<p class="subtitle" id="subtitle"></p>
+<div id="chart-wrap">
+  <div id="legend"></div>
+  <div id="chart"></div>
+</div>
+<div class="footer" id="footer" style="display:none">
+  <h2>Notes &amp; assumptions</h2>
+  <ul id="notes"></ul>
+</div>
+<p class="asof" id="asof"></p>
+
+<script>
+(async function () {
+  const LWC = window.LightweightCharts;
+  const spec = JSON.parse(document.getElementById('chart-spec').textContent);
+
+  document.title = spec.title || 'Financial Chart';
+  document.getElementById('title').textContent = spec.title || '';
+  document.getElementById('subtitle').textContent = spec.subtitle || '';
+  if (spec.notes && spec.notes.length) {
+    document.getElementById('footer').style.display = '';
+    const ul = document.getElementById('notes');
+    for (const n of spec.notes) { const li = document.createElement('li'); li.textContent = n; ul.appendChild(li); }
+  }
+  if (spec.asOf) document.getElementById('asof').textContent = 'Data as of ' + spec.asOf + '.';
+
+  let data;
+  try {
+    const res = await fetch(spec.dataUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + spec.dataUrl);
+    data = await res.json();
+  } catch (e) {
+    document.getElementById('chart-wrap').innerHTML =
+      '<div class="error">Failed to load data (' + e.message + ')</div>';
+    return;
+  }
+
+  const el = document.getElementById('chart');
+  const chart = LWC.createChart(el, {
+    autoSize: true,
+    layout: {
+      background: { type: 'solid', color: '#ffffff' },
+      textColor: '#4a4a4a',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
+      panes: { separatorColor: '#e3ddd2', separatorHoverColor: '#c9c0b0' }
+    },
+    grid: {
+      vertLines: { color: '#f1ece3' },
+      horzLines: { color: '#f1ece3' }
+    },
+    crosshair: { mode: LWC.CrosshairMode.Normal },
+    rightPriceScale: { borderColor: '#e3ddd2' },
+    timeScale: { borderColor: '#e3ddd2', rightOffset: 4 }
+  });
+
+  const LINE_COLORS = ['#1e3a5f', '#c98a2d', '#5d7a94', '#7a5d94', '#94765d'];
+  let lineIdx = 0;
+
+  // seriesHandles: [{api, title, type, dataKey}] for the crosshair legend.
+  const seriesHandles = [];
+  const byKey = {}; // dataKey -> series api (for markers attachTo)
+
+  spec.panes.forEach((pane, paneIndex) => {
+    for (const s of pane.series) {
+      if (s.type === 'markers') continue; // second pass, needs target series
+      const seriesData = data[s.data];
+      if (!seriesData) {
+        console.error('Missing data key: ' + s.data);
+        continue;
+      }
+      let api;
+      if (s.type === 'candlestick') {
+        api = chart.addSeries(LWC.CandlestickSeries, {
+          upColor: '#1f7a5c', downColor: '#b4443c',
+          wickUpColor: '#1f7a5c', wickDownColor: '#b4443c',
+          borderVisible: false
+        }, paneIndex);
+      } else if (s.type === 'line') {
+        api = chart.addSeries(LWC.LineSeries, {
+          color: s.color || LINE_COLORS[lineIdx++ % LINE_COLORS.length],
+          lineWidth: 2, priceLineVisible: false, lastValueVisible: false
+        }, paneIndex);
+      } else if (s.type === 'area') {
+        const c = s.color || '#1e3a5f';
+        api = chart.addSeries(LWC.AreaSeries, {
+          lineColor: c, topColor: c + '33', bottomColor: c + '05', lineWidth: 2
+        }, paneIndex);
+      } else if (s.type === 'histogram') {
+        api = chart.addSeries(LWC.HistogramSeries, {
+          color: s.color || '#b9c5d1', priceFormat: { type: 'volume' },
+          priceLineVisible: false, lastValueVisible: false
+        }, paneIndex);
+      } else {
+        console.error('Unknown series type: ' + s.type);
+        continue;
+      }
+      api.setData(seriesData);
+      byKey[s.data] = api;
+      seriesHandles.push({ api, title: s.title || s.data, type: s.type, dataKey: s.data });
+    }
+  });
+
+  // Markers pass — attach to their target series (same pane).
+  spec.panes.forEach((pane) => {
+    for (const s of pane.series) {
+      if (s.type !== 'markers') continue;
+      const target = byKey[s.attachTo];
+      const markers = data[s.data];
+      if (!target || !markers) { console.error('markers: missing target/data'); continue; }
+      LWC.createSeriesMarkers(target, markers);
+    }
+  });
+
+  // Pane heights from stretch weights. v5's pane.setHeight rebalances the
+  // other panes on every call, so set ALL panes explicitly, main pane last,
+  // after the first layout tick (heights applied before layout are clamped).
+  function applyPaneHeights() {
+    const panes = chart.panes();
+    const weights = spec.panes.map((p) => p.stretch || 1);
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    const usable = el.clientHeight - 28; // minus time axis
+    for (let i = spec.panes.length - 1; i >= 0; i--) {
+      if (panes[i]) panes[i].setHeight(Math.round(usable * weights[i] / totalWeight));
+    }
+  }
+  requestAnimationFrame(applyPaneHeights);
+
+  // Crosshair legend: series values at the hovered bar (last bar when idle).
+  const legend = document.getElementById('legend');
+  function fmt(v) {
+    if (v == null || isNaN(v)) return '—';
+    return Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : (+v).toFixed(2);
+  }
+  function renderLegend(param) {
+    const rows = [];
+    for (const h of seriesHandles) {
+      let text = '—';
+      const d = param && param.seriesData ? param.seriesData.get(h.api) : null;
+      if (d) {
+        text = h.type === 'candlestick'
+          ? 'O ' + fmt(d.open) + '  H ' + fmt(d.high) + '  L ' + fmt(d.low) + '  C ' + fmt(d.close)
+          : fmt(d.value);
+      } else {
+        const arr = data[h.dataKey];
+        const last = arr && arr[arr.length - 1];
+        if (last) text = h.type === 'candlestick' ? 'C ' + fmt(last.close) : fmt(last.value);
+      }
+      rows.push('<div class="row"><span class="name">' + h.title + '</span><span class="val">' + text + '</span></div>');
+    }
+    legend.innerHTML = rows.join('');
+  }
+  renderLegend(null);
+  chart.subscribeCrosshairMove(renderLegend);
+
+  chart.timeScale().fitContent();
+})();
+</script>
+</body>
+</html>
