@@ -73,6 +73,10 @@ If `AUTH_TOKEN` is empty or `null`, report that authentication is unavailable an
 Ranges are indicative (checked 2026-07); daily tables land the prior trading
 day, intraday is delayed.
 
+The 1-minute bar tables are served through a heavier execution path — a
+query can take tens of seconds. Keep the window narrow (one ticker, days not
+months) and allow a generous client timeout (the CLI defaults to 180s).
+
 ## 2. Get a table's columns — before querying it
 
 `DESCRIBE` does not work (see above). Read the real columns from a single row:

@@ -423,7 +423,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--api-url", help="Relay API base URL. Defaults to auth.json sandbox relay_url or https://api.rebyte.ai.")
     parser.add_argument("--auth-token", help="Bearer token. Defaults to AUTH_TOKEN, rebyte-auth, or auth.json sandbox token.")
-    parser.add_argument("--timeout", type=int, default=60, help="HTTP timeout in seconds.")
+    parser.add_argument("--timeout", type=int, default=180, help="HTTP timeout in seconds. 1-minute bar tables can take tens of seconds server-side.")
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
