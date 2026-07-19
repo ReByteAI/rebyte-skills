@@ -1,0 +1,27 @@
+{
+  "default_api_url": "https://api.rebyte.ai",
+  "auth_json": "/home/user/.rebyte.ai/auth.json",
+  "data_path": "/api/data",
+  "catalog_note": "Static catalog (checked 2026-07). SHOW TABLES / DESCRIBE / information_schema are not supported by the data service; this list plus `SELECT * FROM <table> LIMIT 1` is the discovery path. Full details: data/SKILL.md.",
+  "catalog": [
+    {"table": "us.eod", "range": "2021-06 -> present", "description": "Daily price and volume history for US stocks (open/high/low/close/volume). Prices as-traded, NOT split/dividend adjusted."},
+    {"table": "us.bars_1m", "range": "2021-06 -> present", "description": "Minute-by-minute price and volume for US stocks. Very large - always filter by ticker and time window."},
+    {"table": "us.fundamentals", "range": "filings -> present", "description": "Company financial statements as filed with the SEC (income statement, balance sheet, cash flow), one row per company per reporting period."},
+    {"table": "us.news", "range": "2016-06 -> present", "description": "Financial news articles: timestamp, headline, related tickers, full text. The only table searchable by meaning via /search."},
+    {"table": "us.splits", "range": "1978 -> future-dated", "description": "Every stock split: ticker, effective date, and ratio. Needed to adjust raw prices across a split."},
+    {"table": "us.dividends", "range": "2000 -> future-dated", "description": "Every cash dividend: ex-dividend date, payment date, amount per share, payout frequency."},
+    {"table": "us.short_volume", "range": "2024-02 -> present", "description": "For each stock and day, how much of that day's trading volume came from short selling, by trading venue."},
+    {"table": "us.short_interest", "range": "2017-12 -> present", "description": "Total shares currently sold short per stock, reported twice a month, with days-to-cover."},
+    {"table": "us.tickers", "range": "snapshot", "description": "Master list of every US ticker, listed or delisted, with exchange and identifiers. Use to build universes and join tables."},
+    {"table": "us.ipos", "range": "2008 -> present", "description": "Companies going public: announcement and listing dates, offer price and size, offering status."},
+    {"table": "cn.bars_day", "range": "1990-12 -> present", "description": "Daily price and volume history for China A-shares, with the cumulative adjustment factor for split/dividend-adjusted prices."},
+    {"table": "cn.bars_1m", "range": "2021-06 -> present", "description": "Minute-by-minute price and volume for China A-shares. Very large - filter by stock and time window."},
+    {"table": "cn.daily_basic", "range": "2021-06 -> present", "description": "Per-stock daily valuation and trading snapshot: price-to-earnings, price-to-book, turnover rate, market cap."},
+    {"table": "cn.income", "range": "2013 -> present", "description": "Quarterly/annual income statements of listed Chinese companies: revenue, costs, profit, earnings per share."},
+    {"table": "cn.balancesheet", "range": "2013 -> present", "description": "Balance sheets of listed Chinese companies: assets, liabilities, shareholder equity."},
+    {"table": "cn.cashflow", "range": "2013 -> present", "description": "Cash-flow statements of listed Chinese companies: operating, investing, and financing cash flows."},
+    {"table": "cn.fina_indicator", "range": "2013 -> present", "description": "Precomputed financial ratios per company per period: profitability, leverage, liquidity, growth."},
+    {"table": "cn.moneyflow", "range": "2010 -> present", "description": "For each stock and day, the net value of buying versus selling - money flowing into or out of the stock."},
+    {"table": "cn.top_list", "range": "2010 -> present", "description": "Exchanges' daily disclosure of stocks with unusual price moves or turnover: which stocks, why, and the net amount the most active trading desks bought or sold."}
+  ]
+}

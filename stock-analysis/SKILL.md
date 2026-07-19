@@ -1,55 +1,72 @@
 ---
-version: 1
+version: 2
 name: stock-analysis
-description: "Comprehensive stock and company analysis with real market data. Covers price history, technical analysis, company research, news sentiment, SEC filings, insider trading, and multi-stock comparison. Use when user mentions stock tickers, asks about stock prices, company analysis, investment research, or financial data. Triggers: stock symbol (AAPL, TSLA), 'stock price', 'analyze stock', 'compare stocks', 'company financials', 'insider trading', 'SEC filing', 'is X a good buy', 'stock chart', 'price history'. Do NOT use for full-blown multi-source research reports (use financial-deep-research instead)."
+description: "The single financial skill: stock and company analysis plus strategy backtesting, on the Rebyte financial data lake (US equities + China A-shares). Covers price history, technical analysis, company research, news, fundamentals, dividends/splits, insider trading via SEC EDGAR, multi-stock comparison, and NautilusTrader backtesting with a first-class result bundle. Use when the user mentions stock tickers, stock prices, company analysis, investment research, financial data, or wants to backtest a strategy. Triggers: stock symbol (AAPL, TSLA, 000001.SZ), 'stock price', 'analyze stock', 'compare stocks', 'company financials', 'insider trading', 'SEC filing', 'is X a good buy', 'price history', 'backtest', '回测'. Do NOT use for full-blown multi-source research reports (use financial-deep-research instead)."
 ---
 
 # Stock Analysis
 
-Comprehensive stock and company analysis using real-time market data and SEC filings.
+Stock and company analysis plus strategy backtesting on the Rebyte financial
+data lake.
 
-**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the agent's system prompt; use them as Bearer token and base URL.
+**Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the
+agent's system prompt; use them as Bearer token and base URL.
 
-## Data Sources
+## Skill layout — load the pillar you need
 
-| Source | What it provides | How to access |
-|--------|-----------------|---------------|
-| **Market Data API** | OHLCV bars, news w/ sentiment, company details, financials, dividends, splits | REST API via `$API_URL` (see below) |
-| **SEC EDGAR** | 10-K, 10-Q, 8-K full text, insider trades, detailed financial statements | `edgartools` Python library (see [references/sec-edgar.md](references/sec-edgar.md)) |
+| Pillar | When |
+|---|---|
+| this file | Analysis playbooks: price checks, company overviews, comparisons, fundamentals, technicals |
+| [`data/SKILL.md`](data/SKILL.md) | Data access mechanics: full 19-table catalog (US + CN), SQL patterns, semantic news search, error rules. **Read before writing SQL.** |
+| [`backtesting/SKILL.md`](backtesting/SKILL.md) | Strategy simulation: 5-phase NautilusTrader workflow ending in a backtest result bundle |
+| [`financial-templates/SKILL.md`](financial-templates/SKILL.md) | Analysis structures (DCF, comps, memo formats) with no data calls |
+| [`report-style/README.md`](report-style/README.md) | Kami design system for every HTML report this skill delivers |
+| `references/sec-edgar.md` | SEC filings, full 10-K/10-Q text, insider (Form 4) trades via edgartools |
 
-**Market Data coverage:** All US tickers, 5 years history, 15-min delayed quotes, no rate limits.
+Price/K-line charts: use the **`financial-charts`** skill (TradingView-style
+Lightweight Charts).
 
-**When to use which for financials:**
-- **Market Data API `financials`** — fast, structured, no setup needed. Use for revenue, earnings, margins, balance sheet, cash flow. Covers annual, quarterly, and TTM.
-- **SEC EDGAR** — use when you need full filing text, specific filing sections (risk factors, MD&A), or data the API doesn't cover.
+## Data sources
+
+| Source | What it provides | Access |
+|--------|-----------------|--------|
+| **Rebyte financial data lake** | US: daily + 1-minute bars, news (semantic-searchable), SEC-filing fundamentals, splits, dividends, short data, ticker universe, IPOs. CN A-shares: daily + 1-minute bars, valuation snapshots, financial statements, money flow, unusual-move disclosures. | Read-only SQL via `POST $API_URL/api/data/financial/sql` — see `data/SKILL.md` |
+| **SEC EDGAR** | Full filing text (10-K, 10-Q, 8-K), filing sections, insider (Form 4) trades | `edgartools` Python library — see `references/sec-edgar.md` |
+
+**Freshness — the lake is historical (T+1).** Daily tables land the prior
+trading day; intraday is delayed. There is no realtime feed: answer "current
+price" questions with the latest available bar and **state its date**. Never
+invent fresher data.
 
 ---
 
 ## Analysis Workflows
 
+All data steps below are lake SQL (recipes in the next section).
+
 ### 1. Quick Stock Check
 ```
 User: "What's AAPL doing?" / "AAPL price"
-→ Get price bars (1day, last 1 month)
-→ Get company details
-→ Present: current price, recent trend, basic company info
+→ Latest daily bars (last 1 month) — quote the last close and its date
+→ Ticker details
+→ Present: last close + date, recent trend, basic company info
 ```
 
 ### 2. Company Overview
 ```
 User: "Tell me about NVDA" / "What does Tesla do?"
-→ Get company details (name, sector, market cap, employees)
-→ Get price bars (1day, last 3 months)
-→ Get news (last 5 articles with sentiment)
-→ Present: business summary, market position, recent performance, news sentiment
+→ Ticker details + latest fundamentals period (revenue, net income)
+→ Daily bars (last 3 months)
+→ Recent news (5 headlines) — semantic search for themes if needed
+→ Present: business summary, market position, recent performance, news themes
 ```
 
 ### 3. Technical Analysis
 ```
 User: "Is TSLA a good buy?" / "AAPL technical analysis"
-→ Get price bars (1day, last 6 months) — trend, support/resistance
-→ Get price bars (1hour, last 5 days) — short-term momentum
-→ Get news (last 10 articles) — sentiment context
+→ Daily bars (last 6 months) — trend, support/resistance
+→ 1-minute bars aggregated to hourly (last 5 trading days) — short-term momentum
+→ Recent news (10 articles) — read and judge the tone yourself
 → Compute: moving averages, price range, volume trends
 → Present: trend direction, key levels, volume analysis, sentiment, outlook
 ```
@@ -57,241 +74,150 @@ User: "Is TSLA a good buy?" / "AAPL technical analysis"
 ### 4. Multi-Stock Comparison
 ```
 User: "Compare AAPL vs MSFT vs GOOGL"
-→ Get company details for each
-→ Get price bars (1day, last 6 months) for each
-→ Get news for each
-→ Compare: market cap, price performance, sector, sentiment
-→ Present: side-by-side table, relative performance chart data
+→ One SQL per dataset covering all tickers (WHERE ticker IN (...))
+→ Compare: price performance, fundamentals, news flow
+→ Present: side-by-side table, relative performance
 ```
 
 ### 5. Fundamental Deep Dive
 ```
 User: "AAPL financials" / "NVDA revenue trend"
-→ Get company details
-→ Get financials (annual, 5 periods) — revenue, earnings, margins, cash flow
-→ Get financials (quarterly, 4 periods) — recent quarterly trends
-→ Get dividends (last 12) — dividend history and yield
-→ Get price bars (1week, last 2 years) — long-term price context
+→ Fundamentals: annual (5 periods) + quarterly (4 periods)
+→ Dividends (last 12) — history and implied yield vs latest close
+→ Weekly-aggregated bars (last 2 years) — long-term price context
 → Compute: revenue growth, margin trends, EPS trend, payout ratio
-→ Present: revenue/earnings trends, margins, key ratios, dividend history
-→ Optional: SEC EDGAR for full 10-K text if user needs filing details
+→ Optional: SEC EDGAR for full 10-K text
 ```
 
 ### 6. Insider Activity
 ```
 User: "Insider trading for TSLA" / "Are executives buying NVDA?"
-→ SEC EDGAR: Form 4 filings (insider trades)
-→ Get company details (executive context)
-→ Get price bars (1day, last 3 months) — price context around trades
+→ SEC EDGAR: Form 4 filings (the lake does not carry insider trades)
+→ Daily bars (last 3 months) — price context around the trades
 → Present: recent transactions, insider sentiment, correlation with price
 ```
 
 ### 7. Due Diligence Package
 ```
 User: "Full analysis of MSFT" / "Due diligence on AMD"
-→ Get company details
-→ Get price bars (1day, last 1 year)
-→ Get financials (annual, 5 periods) — full financial history
-→ Get financials (quarterly, 4 periods) — recent quarterly performance
-→ Get dividends (last 12) — dividend track record
-→ Get splits — historical splits
-→ Get news (last 20 articles)
-→ SEC EDGAR: latest 10-K and recent 8-K filings (for qualitative details)
-→ SEC EDGAR: Form 4 insider trades
-→ Present: comprehensive report with business overview, financials,
-   valuation context, insider sentiment, risks, and news summary
+→ Ticker details, 1y daily bars, annual + quarterly fundamentals,
+  dividends, splits, 20 recent news items
+→ SEC EDGAR: latest 10-K, recent 8-Ks, Form 4 insider trades
+→ Present: comprehensive report (Kami-styled HTML per report-style/)
 ```
 
 ### 8. Sector Research
 ```
 User: "Compare cloud stocks" / "Best semiconductor stocks"
-→ Identify relevant tickers
-→ Get company details for each
-→ Get price bars (1day, last 6 months) for each
-→ Get news for sector keywords
-→ Compare: market caps, performance, business focus
+→ Identify tickers (us.tickers can filter by name/type/exchange)
+→ Batch daily bars + fundamentals across the set
+→ Semantic news search on the sector theme
 → Present: sector overview, leaders, relative performance
+```
+
+### 9. Strategy Backtest
+```
+User: "Backtest an SMA crossover on AAPL" / "验证我的策略"
+→ Switch to backtesting/SKILL.md and run its 5 phases end-to-end
+→ Deliverable is the backtest bundle at /code/backtests/<slug>/
 ```
 
 ---
 
 ## Trigger Patterns
 
-**ALWAYS fetch data when the user mentions any of these. Do NOT answer from memory — use the APIs.**
+**ALWAYS fetch data when the user mentions any of these. Do NOT answer from
+memory — query the lake.**
 
 | User intent | Required actions |
 |------------|-----------------|
-| Stock symbol mentioned (AAPL, $TSLA) | Get price bars + company details |
-| "price", "chart", "how is X doing" | Get price bars (adjust interval/range to question) |
-| "news", "what's happening with" | Get news (10+ articles) |
-| "analyze", "research", "tell me about" | Company details + price bars + news |
-| "compare", "vs", "versus" | All data for each stock, side-by-side |
-| "buy", "sell", "good investment" | Price bars + news + financials (annual + quarterly) |
-| "financials", "revenue", "earnings" | Get financials (annual + quarterly) |
-| "dividend", "yield", "payout" | Get dividends |
-| "split", "stock split" | Get splits |
+| Stock symbol mentioned (AAPL, $TSLA, 000001.SZ) | Daily bars + ticker details |
+| "price", "chart", "how is X doing" | Daily bars (aggregate 1-minute bars for intraday granularity) |
+| "news", "what's happening with" | News query (10+ items) or semantic search |
+| "analyze", "research", "tell me about" | Details + bars + news |
+| "compare", "vs", "versus" | All datasets for each stock, side-by-side |
+| "buy", "sell", "good investment" | Bars + news + fundamentals (annual + quarterly) |
+| "financials", "revenue", "earnings" | Fundamentals (annual + quarterly) |
+| "dividend", "yield", "payout" | `us.dividends` |
+| "split", "stock split" | `us.splits` |
+| "short interest", "shorts" | `us.short_interest` / `us.short_volume` |
 | "insider", "who's buying/selling" | SEC EDGAR Form 4 filings |
 | "10-K", "10-Q", "SEC filing" | SEC EDGAR filings |
-| "sector", "industry" | Multiple stocks in sector |
+| "backtest", "回测", "strategy performance" | `backtesting/SKILL.md` |
 
 ---
 
-## Market Data API Reference
+## Lake SQL recipes
 
-### Get Price Bars (OHLCV)
+Auth + request format, DataFusion-style SQL patterns, the on-error rule, and
+the full table catalog are in `data/SKILL.md`. The recipes below map the
+common analysis needs; tickers are UPPERCASE for US, `NNNNNN.SZ`/`NNNNNN.SH`
+for CN.
 
-```bash
-curl -X POST "$API_URL/api/data/stocks/bars" \
-  -H "Authorization: Bearer $AUTH_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ticker": "AAPL",
-    "interval": "1day",
-    "from": "2024-12-01",
-    "to": "2024-12-31"
-  }'
+```sql
+-- Price bars, daily (raw, unadjusted; check us.splits before spanning a split)
+SELECT t, o, h, l, c, v FROM us.eod
+WHERE ticker = 'AAPL' AND t >= to_timestamp('2026-01-01')
+ORDER BY t
+
+-- Intraday / custom intervals: aggregate 1-minute bars
+SELECT date_bin(INTERVAL '1 hour', t, TIMESTAMP '1970-01-01') AS bucket,
+       min(t) AS t_open, max(h) AS h, min(l) AS l, sum(v) AS v
+FROM us.bars_1m
+WHERE ticker = 'AAPL' AND t >= now() - INTERVAL '5 days'
+GROUP BY bucket ORDER BY bucket
+
+-- News for a ticker (tickers is an array column)
+SELECT published_utc, title, tickers FROM us.news
+WHERE array_has(tickers, 'AAPL')
+ORDER BY published_utc DESC LIMIT 10
+-- Thematic retrieval ("news about AI chip demand"): use the semantic /search
+-- endpoint instead of ILIKE — see data/SKILL.md.
+
+-- Fundamentals (SEC-filing derived; is_* income, bs_* balance, cf_* cashflow)
+SELECT fiscal_year, fiscal_period, is_revenues, is_gross_profit,
+       is_operating_income_loss, is_net_income_loss,
+       is_diluted_earnings_per_share, bs_assets, bs_liabilities, bs_equity,
+       cf_net_cash_flow_from_operating_activities
+FROM us.fundamentals
+WHERE array_has(tickers, 'AAPL') AND timeframe = 'annual'
+ORDER BY fiscal_year DESC LIMIT 5
+
+-- Dividends / splits
+SELECT ex_dividend_date, cash_amount, frequency FROM us.dividends
+WHERE ticker = 'AAPL' ORDER BY ex_dividend_date DESC LIMIT 12;
+SELECT execution_date, split_from, split_to FROM us.splits
+WHERE ticker = 'AAPL' ORDER BY execution_date DESC
+
+-- Ticker details / universe screen
+SELECT ticker, name, primary_exchange, type, active, cik FROM us.tickers
+WHERE ticker = 'AAPL'
+
+-- CN A-share daily bars (adj_factor included for adjusted series)
+SELECT t, o, h, l, c, v, pct_chg, adj_factor FROM cn.bars_day
+WHERE ts_code = '000001.SZ' AND t >= to_timestamp('2026-01-01')
+ORDER BY t
+
+-- CN valuation snapshot / financial indicators
+SELECT trade_date, pe_ttm, pb, turnover_rate, total_mv FROM cn.daily_basic
+WHERE ts_code = '000001.SZ' ORDER BY trade_date DESC LIMIT 20
 ```
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `ticker` | string | Yes | Stock symbol, UPPERCASE (e.g., `AAPL`) |
-| `interval` | string | Yes | `1min`, `5min`, `15min`, `30min`, `1hour`, `4hour`, `1day`, `1week` |
-| `from` | date | Yes | Start date (`YYYY-MM-DD`) |
-| `to` | date | Yes | End date (`YYYY-MM-DD`) |
-
-**Response fields:** `t` (timestamp), `o` (open), `h` (high), `l` (low), `c` (close), `v` (volume), `vw` (VWAP), `n` (trade count)
-
-### Get News
+The `data/scripts/anyfinancial_cli.py` helper wraps auth + the SQL endpoint:
 
 ```bash
-curl -X POST "$API_URL/api/data/stocks/news" \
-  -H "Authorization: Bearer $AUTH_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"ticker": "TSLA", "limit": 10}'
-```
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `ticker` | string | Yes | Stock symbol |
-| `limit` | number | No | Max articles (default: 10, max: 100) |
-
-**Response fields:** `title`, `description`, `author`, `publisher`, `publishedAt`, `url`, `tickers`, `keywords`, `sentiment` (positive/negative/neutral), `sentimentReasoning`
-
-### Get Company Details
-
-```bash
-curl -X POST "$API_URL/api/data/stocks/details" \
-  -H "Authorization: Bearer $AUTH_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"ticker": "AAPL"}'
-```
-
-**Response fields:** `ticker`, `name`, `description`, `market`, `primaryExchange`, `type`, `currencyName`, `marketCap`, `listDate`, `sicDescription`, `homepage`, `totalEmployees`
-
-### Get Financials (Income Statement, Balance Sheet, Cash Flow)
-
-```bash
-curl -X POST "$API_URL/api/data/stocks/financials" \
-  -H "Authorization: Bearer $AUTH_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"ticker": "AAPL", "timeframe": "annual", "limit": 5}'
-```
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `ticker` | string | Yes | Stock symbol, UPPERCASE |
-| `timeframe` | string | No | `annual` (default), `quarterly`, or `ttm` |
-| `limit` | number | No | Number of periods (default 5, max 20) |
-
-**Response:** Array of periods, each containing:
-- `companyName`, `fiscalPeriod` (FY, Q1-Q4, TTM), `fiscalYear`, `startDate`, `endDate`, `filingDate`
-- `incomeStatement`: `revenues`, `cost_of_revenue`, `gross_profit`, `operating_expenses`, `operating_income_loss`, `net_income_loss`, `basic_earnings_per_share`, `diluted_earnings_per_share`, etc.
-- `balanceSheet`: `assets`, `current_assets`, `noncurrent_assets`, `liabilities`, `current_liabilities`, `long_term_debt`, `equity`, `inventory`, `accounts_payable`, etc.
-- `cashFlowStatement`: `net_cash_flow_from_operating_activities`, `net_cash_flow_from_investing_activities`, `net_cash_flow_from_financing_activities`, `net_cash_flow`, etc.
-- `comprehensiveIncome`: `comprehensive_income_loss`, `other_comprehensive_income_loss`, etc.
-
-Each field is `{ value: number, unit: "USD", label: "Human Label" }`.
-
-### Get Dividends
-
-```bash
-curl -X POST "$API_URL/api/data/stocks/dividends" \
-  -H "Authorization: Bearer $AUTH_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"ticker": "AAPL", "limit": 12}'
-```
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `ticker` | string | Yes | Stock symbol, UPPERCASE |
-| `limit` | number | No | Number of dividends (default 12, max 50) |
-
-**Response fields:** `cashAmount`, `currency`, `dividendType`, `exDividendDate`, `payDate`, `recordDate`, `declarationDate`, `frequency` (4=quarterly, 12=monthly, 2=semi-annual)
-
-### Get Stock Splits
-
-```bash
-curl -X POST "$API_URL/api/data/stocks/splits" \
-  -H "Authorization: Bearer $AUTH_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"ticker": "AAPL"}'
-```
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `ticker` | string | Yes | Stock symbol, UPPERCASE |
-
-**Response fields:** `executionDate`, `splitFrom`, `splitTo` (e.g., splitFrom=1, splitTo=4 means 1:4 split)
-
----
-
-## Using with Python
-
-```python
-import subprocess, requests, json
-
-# Auth setup
-AUTH_TOKEN = subprocess.check_output(["/home/user/.local/bin/rebyte-auth"]).decode().strip()
-with open('/home/user/.rebyte.ai/auth.json') as f:
-    API_URL = json.load(f)['sandbox']['relay_url']
-HEADERS = {"Authorization": f"Bearer {AUTH_TOKEN}", "Content-Type": "application/json"}
-
-def get_bars(ticker, interval, from_date, to_date):
-    r = requests.post(f"{API_URL}/api/data/stocks/bars", headers=HEADERS,
-        json={"ticker": ticker, "interval": interval, "from": from_date, "to": to_date})
-    return r.json()
-
-def get_news(ticker, limit=10):
-    r = requests.post(f"{API_URL}/api/data/stocks/news", headers=HEADERS,
-        json={"ticker": ticker, "limit": limit})
-    return r.json()
-
-def get_details(ticker):
-    r = requests.post(f"{API_URL}/api/data/stocks/details", headers=HEADERS,
-        json={"ticker": ticker})
-    return r.json()
-
-def get_financials(ticker, timeframe='annual', limit=5):
-    r = requests.post(f"{API_URL}/api/data/stocks/financials", headers=HEADERS,
-        json={"ticker": ticker, "timeframe": timeframe, "limit": limit})
-    return r.json()
-
-def get_dividends(ticker, limit=12):
-    r = requests.post(f"{API_URL}/api/data/stocks/dividends", headers=HEADERS,
-        json={"ticker": ticker, "limit": limit})
-    return r.json()
-
-def get_splits(ticker):
-    r = requests.post(f"{API_URL}/api/data/stocks/splits", headers=HEADERS,
-        json={"ticker": ticker})
-    return r.json()
+python3 data/scripts/anyfinancial_cli.py catalog
+python3 data/scripts/anyfinancial_cli.py schema us.eod
+python3 data/scripts/anyfinancial_cli.py query "SELECT ... LIMIT 10"
+python3 data/scripts/anyfinancial_cli.py search "Fed rate cut expectations" --columns title,published_utc
 ```
 
 ---
 
 ## SEC EDGAR Reference
 
-For SEC filings, financial statements, and insider trading data, see [references/sec-edgar.md](references/sec-edgar.md).
+For full filing text, filing sections, and insider trading data, see
+[references/sec-edgar.md](references/sec-edgar.md).
 
 **Quick start:**
 ```python
@@ -302,8 +228,6 @@ from edgar import Company, set_identity
 set_identity("Rebyte Agent agent@rebyte.ai")
 
 company = Company("AAPL")
-income = company.income_statement(periods=5)   # 5 periods of income data
-balance = company.balance_sheet(periods=3)      # 3 periods of balance sheet
 filings = company.get_filings(form="10-K")      # Annual reports
 insider = company.get_filings(form="4")         # Insider trades
 ```
@@ -314,50 +238,47 @@ insider = company.get_filings(form="4")         # Insider trades
 
 ### Computing Technical Indicators from Price Bars
 
-The API returns raw OHLCV data. Compute indicators yourself:
+The lake returns raw OHLCV. Compute indicators yourself (or in SQL):
 
-- **Simple Moving Average (SMA)**: Average of last N closing prices (use 20-day and 50-day)
-- **Price trend**: Compare current close to 20-day and 50-day SMA
-- **Support/Resistance**: Recent lows and highs from daily bars
-- **Volume trend**: Compare recent volume to 20-day average volume
-- **52-week range**: Min low and max high from 1-year daily bars
-- **Price change**: Percentage change over period
+- **Simple Moving Average (SMA)**: average of last N closes (20-day and 50-day)
+- **Price trend**: current close vs 20-day and 50-day SMA
+- **Support/Resistance**: recent lows/highs from daily bars
+- **Volume trend**: recent volume vs 20-day average volume
+- **52-week range**: min low / max high over 1 year of daily bars
+- **Corporate actions**: `us.eod` is unadjusted — when the window spans a
+  split, adjust with `us.splits`; CN daily bars carry `adj_factor` directly
 
-### Sentiment Analysis from News
+### Reading News
 
-The news API includes sentiment for each article. Aggregate:
-- Count positive vs negative vs neutral articles
-- Weight recent articles more heavily
-- Note any sentiment shifts (was negative, now positive)
-- Flag high-impact publishers (Reuters, Bloomberg > blogs)
+Lake news carries no precomputed sentiment — read the headlines/content and
+judge the tone yourself, noting publisher weight and recency. For thematic
+questions, prefer the semantic search endpoint over keyword `ILIKE`.
 
-### Financial Statement Analysis (from SEC EDGAR)
+### Financial Statement Analysis
 
-When analyzing financials:
-- **Revenue growth**: YoY percentage change across periods
-- **Margin trends**: Gross margin, operating margin, net margin over time
-- **Cash position**: Cash & equivalents vs total debt
-- **Earnings quality**: Operating cash flow vs net income (should be close)
+- **Revenue growth**: YoY change across periods
+- **Margin trends**: gross/operating/net margin over time
+- **Cash position**: cash & equivalents vs total debt
+- **Earnings quality**: operating cash flow vs net income (should be close)
 
 ### Presenting Results
 
-- Lead with the answer (bullish/bearish/neutral, current price, key metric)
+- Lead with the answer (bullish/bearish/neutral, last close + its date, key metric)
 - Use tables for multi-stock comparisons
 - Include specific numbers with dates — never vague statements
-- Distinguish between facts (from data) and analysis (your interpretation)
-- Note data limitations (15-min delay, US stocks only)
+- Distinguish facts (from data) from analysis (your interpretation)
+- State the data date explicitly — the lake is T+1, not realtime
+- Long-form deliverables: Kami-styled HTML per `report-style/`
 
 ---
 
 ## Important Notes
 
-- **Tickers must be UPPERCASE** (e.g., `AAPL`, not `aapl`)
-- **All timestamps are UTC** (ISO 8601 format)
-- **Price data is 15-minute delayed** — not real-time
-- **US stocks only** for market data API
-- **SEC EDGAR is free** — no API key needed, but requires identity string
-- **Historical data**: 5 years for market data, full history for SEC filings
-- **No rate limits** on market data API (use responsibly)
+- **US tickers UPPERCASE** (`AAPL`); **CN codes suffixed** (`000001.SZ`, `600519.SH`)
+- **All timestamps UTC**
+- **Data is T+1** — daily tables land the prior trading day; never present it as realtime
+- **Coverage**: US from 2021-06 (bars) with reference data much deeper (splits 1978→, dividends 2000→); CN daily from 1990-12 — full catalog in `data/SKILL.md`
+- **SEC EDGAR is free** — no API key, but requires an identity string
 
 ---
 
@@ -365,6 +286,5 @@ When analyzing financials:
 
 - **Full research reports** with 10+ sources, citations, methodology → use `financial-deep-research`
 - **Simple web lookup** ("What's Apple's website?") → use web search
-- **Non-US stocks** → market data API only covers US markets
-- **Real-time trading** → data is 15-min delayed
+- **Realtime quotes / live trading** → not available; the lake is historical (T+1)
 - **Personal financial advice** → not qualified
