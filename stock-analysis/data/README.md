@@ -20,7 +20,7 @@ from `/home/user/.rebyte.ai/auth.json`.
 ## Workflow: catalog → schema → query
 
 ```bash
-# 1. List every table the service holds (runs SHOW TABLES)
+# 1. List every table + its description (financial/catalog; optional --market us|cn)
 python3 scripts/anyfinancial_cli.py catalog
 
 # 2. Read a table's exact columns before querying it

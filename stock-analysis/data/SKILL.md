@@ -34,64 +34,57 @@ API_URL="${API_URL:-https://api.rebyte.ai}"
 
 If `AUTH_TOKEN` is empty or `null`, report that authentication is unavailable and stop. Do not invent credentials.
 
-## 1. The catalog — every served table
+## 1. The catalog — what tables exist
 
-> **IMPORTANT — metadata SQL is unavailable.** `SHOW TABLES`, `DESCRIBE`, and
-> any `information_schema` query are **not supported by the service and fail**.
-> Do NOT use them, do NOT retry them. The table below is the catalog; discover
-> columns with `SELECT * FROM <table> LIMIT 1` (step 2).
+`financial/catalog` returns every table and a one-line description of what it
+is. Filter to a market with `market` = `us` (US equities) or `cn` (China
+A-shares); omit it for both. Call this first, then pull columns for the tables
+you actually need (step 2).
 
-**US equities** (identifier `ticker`; time column `t` unless noted):
+```bash
+python3 scripts/anyfinancial_cli.py catalog            # both markets
+python3 scripts/anyfinancial_cli.py catalog --market cn
+```
 
-| Table | Range | What it is |
-|---|---|---|
-| `us.eod` | 2021-06 → present | Daily price and volume history for US stocks (open/high/low/close/volume). Prices are as-traded — NOT adjusted for splits or dividends. |
-| `us.bars_1m` | 2021-06 → present | Minute-by-minute price and volume for US stocks. Very large — always filter by ticker and a time window. |
-| `us.fundamentals` | filings → present | Company financial statements as filed with the SEC — income statement, balance sheet, cash flow — one row per company per reporting period (annual, quarterly, or trailing-12-months). 200+ metric columns. |
-| `us.news` | 2016-06 → present | Financial news articles: timestamp, headline, related tickers, full text. The only table you can search by meaning — use `/search`. |
-| `us.splits` | 1978 → future-dated | Every stock split: which ticker, the effective date, and the ratio (e.g. 2-for-1). Needed to adjust raw prices across a split. |
-| `us.dividends` | 2000 → future-dated | Every cash dividend: ex-dividend date, payment date, amount per share, payout frequency. |
-| `us.short_volume` | 2024-02 → present | For each stock and day, how much of that day's trading volume came from short selling, broken down by trading venue. |
-| `us.short_interest` | 2017-12 → present | Total shares currently sold short per stock, reported twice a month, with average daily volume and how many days of trading it would take to cover. |
-| `us.tickers` | snapshot | Master list of every US ticker, listed or delisted, with exchange, security type, and identifiers. Use it to build universes and join other tables. |
-| `us.ipos` | 2008 → present | Companies going public: announcement and listing dates, offer price and size, and current status of each offering. |
+```bash
+curl -fsS -X POST "$API_URL/api/data/financial/catalog" \
+  -H "Authorization: Bearer $AUTH_TOKEN" -H "Content-Type: application/json" \
+  -d '{"market":"cn"}' | jq '.'
+```
 
-**China A-shares** (identifier `ts_code` e.g. `000001.SZ`; time column `trade_date`/`trade_time` unless noted):
+Returns `{ tables: [{ table, market, description }, …] }`. US descriptions are
+English, CN descriptions are Chinese.
 
-| Table | Range | What it is |
-|---|---|---|
-| `cn.bars_day` | 1990-12 → present | Daily price and volume history for China A-shares, including the cumulative adjustment factor needed to compute split/dividend-adjusted prices. Time column `t`. |
-| `cn.bars_1m` | 2021-06 → present | Minute-by-minute price and volume for China A-shares. Very large — filter by stock and time window. |
-| `cn.daily_basic` | 2021-06 → present | Per-stock daily valuation and trading snapshot: price-to-earnings, price-to-book, turnover rate, market cap, share counts. |
-| `cn.income` | 2013 → present | Quarterly/annual income statements of listed Chinese companies: revenue, costs, profit, earnings per share. |
-| `cn.balancesheet` | 2013 → present | Balance sheets of listed Chinese companies: assets, liabilities, shareholder equity. |
-| `cn.cashflow` | 2013 → present | Cash-flow statements of listed Chinese companies: operating, investing, and financing cash flows. |
-| `cn.fina_indicator` | 2013 → present | Precomputed financial ratios per company per period: profitability (ROE, margins), leverage, liquidity, growth rates. |
-| `cn.moneyflow` | 2010 → present | For each stock and day, the net value of buying versus selling — was money flowing into or out of the stock. |
-| `cn.top_list` | 2010 → present | The exchanges' daily disclosure of stocks with unusual price moves or turnover: which stocks triggered it, why, and the net amount the most active trading desks bought or sold. |
-
-Ranges are indicative (checked 2026-07); daily tables land the prior trading
-day, intraday is delayed.
-
-The 1-minute bar tables are served through a heavier execution path — a
-query can take tens of seconds. Keep the window narrow (one ticker, days not
-months) and allow a generous client timeout (the CLI defaults to 180s).
+> **IMPORTANT — do not use metadata SQL.** `SHOW TABLES`, `DESCRIBE`, and
+> `information_schema` queries are not a reliable discovery path here. Use
+> `catalog` for tables and `schema` (below) for columns — never guess.
 
 ## 2. Get a table's columns — before querying it
 
-`DESCRIBE` does not work (see above). Read the real columns from a single row:
+`financial/schema` returns the live column list for one or more tables — each
+column's `name`, `type`, and a human `doc` (US-English / CN-Chinese). This is
+the source of truth for column names and meanings; it is always current, so
+never guess column names and never hardcode them.
 
 ```bash
-python3 scripts/anyfinancial_cli.py query "SELECT * FROM cn.bars_1m LIMIT 1"
+python3 scripts/anyfinancial_cli.py schema cn.daily_basic us.eod
 ```
 
 ```bash
-curl -fsS -X POST "$API_URL/api/data/financial/sql" \
+curl -fsS -X POST "$API_URL/api/data/financial/schema" \
   -H "Authorization: Bearer $AUTH_TOKEN" -H "Content-Type: application/json" \
-  -d '{"sql":"SELECT * FROM cn.bars_1m LIMIT 1","parameters":[]}' | jq '.'
+  -d '{"tables":["cn.daily_basic","us.eod"]}' | jq '.'
 ```
 
-The keys of the returned row are the column names. Do not guess column names.
+Returns `{ schemas: { "cn.daily_basic": [{ name, type, doc }, …], … } }`. Pass
+several tables at once when a query joins across them.
+
+Notes that still hold: `us.eod` is raw (unadjusted) — join `us.splits`
+to adjust; `cn.bars_day` carries an adjustment factor. Daily tables land the
+prior trading day (T+1); intraday is delayed. The 1-minute bar tables
+(`us.bars_1m`, `cn.bars_1m`) run through a heavier path — a query can take tens
+of seconds, so keep the window narrow (one ticker, days not months) and allow a
+generous client timeout.
 
 ## 3. Query
 
@@ -157,7 +150,7 @@ Do **not** use (they error — switch syntax, do not retry as-is):
 - Read-only, one statement per request. Start with `SELECT` or `WITH` (`SHOW`/`DESCRIBE`/`EXPLAIN` are not supported by the service — don't use them).
 - No mutating statements (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `CREATE`, `TRUNCATE`, …).
 - Project only needed columns and add `LIMIT` while exploring.
-- The catalog table (step 1) and a `SELECT * … LIMIT 1` probe (step 2) are the source of truth for table and column names.
+- `financial/catalog` (step 1) and `financial/schema` (step 2) are the source of truth for table and column names — always current. Never guess or hardcode.
 
 ## On error — do not loop
 

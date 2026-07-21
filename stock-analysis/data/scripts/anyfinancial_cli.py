@@ -292,19 +292,16 @@ _TABLE_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*
 
 
 def cmd_schema(args) -> None:
-    """Return a single table's columns by probing one row.
-
-    DESCRIBE (like SHOW TABLES / information_schema) is not supported by the
-    data service, so the working discovery path is
-    `SELECT * FROM <table> LIMIT 1` — the keys of the returned row are the
-    column names.
-    """
-    table = args.table.strip()
-    if not _TABLE_NAME_RE.match(table):
-        print(
-            f"Error: invalid table name '{table}'. Use a schema-qualified identifier, e.g. cn.bars_1m.",
-            file=sys.stderr,
-        )
+    """Live column schemas (name/type/doc) for one or more tables via the
+    financial/schema op. Column docs are US-English / CN-Chinese and always
+    current — never hardcode column names."""
+    tables = [t.strip() for t in args.tables if t.strip()]
+    for t in tables:
+        if not _TABLE_NAME_RE.match(t):
+            print(f"Error: invalid table name '{t}'. Use a schema-qualified identifier, e.g. cn.bars_1m.", file=sys.stderr)
+            sys.exit(1)
+    if not tables:
+        print("Error: pass at least one table, e.g. `schema cn.daily_basic us.eod`.", file=sys.stderr)
         sys.exit(1)
 
     api_url = _resolve_api_url(args)
@@ -313,32 +310,37 @@ def cmd_schema(args) -> None:
         print("Error: authentication token unavailable.", file=sys.stderr)
         sys.exit(1)
 
-    url = _endpoint(api_url, "financial/sql")
-    payload = {"sql": f"SELECT * FROM {table} LIMIT 1", "parameters": []}
+    url = _endpoint(api_url, "financial/schema")
+    payload = {"tables": tables}
     resp, body = _request_json("POST", url, token=token, payload=payload, timeout=args.timeout)
     if args.report:
         print("Command:")
         print(_redacted_curl("POST", url, json.dumps(payload, ensure_ascii=False), auth=True))
         print(f"HTTP result: {resp.status_code if resp is not None else 'request failed'}")
-    rows = body.get("rows") if isinstance(body, dict) else None
-    if isinstance(rows, list) and rows and isinstance(rows[0], dict):
-        _print_json({"table": table, "columns": list(rows[0].keys()), "sample_row": rows[0]})
-    else:
-        _print_json(body)
+    _print_json(body)
     if _request_failed(resp, body):
         sys.exit(1)
 
-
 def cmd_catalog(args) -> None:
-    # The catalog is served statically from shared/constants.json:
-    # SHOW TABLES / information_schema / DESCRIBE are not supported by the
-    # data service, so runtime metadata SQL is not a viable discovery path.
-    # Full per-table docs: data/SKILL.md.
-    catalog = CONSTANTS.get("catalog")
-    if not catalog:
-        print("Error: no 'catalog' in shared/constants.json — repair the skill checkout.", file=sys.stderr)
+    """List tables (+ one-line descriptions) via the financial/catalog op.
+    Optionally scoped to a market (us|cn)."""
+    api_url = _resolve_api_url(args)
+    token = _resolve_token(args)
+    if not token:
+        print("Error: authentication token unavailable.", file=sys.stderr)
         sys.exit(1)
-    _print_json({"note": CONSTANTS.get("catalog_note"), "tables": catalog})
+    url = _endpoint(api_url, "financial/catalog")
+    payload = {}
+    if getattr(args, "market", None):
+        payload["market"] = args.market.strip().lower()
+    resp, body = _request_json("POST", url, token=token, payload=payload, timeout=args.timeout)
+    if args.report:
+        print("Command:")
+        print(_redacted_curl("POST", url, json.dumps(payload, ensure_ascii=False), auth=True))
+        print(f"HTTP result: {resp.status_code if resp is not None else 'request failed'}")
+    _print_json(body)
+    if _request_failed(resp, body):
+        sys.exit(1)
 
 
 def cmd_query(args) -> None:
@@ -427,12 +429,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    catalog_p = subparsers.add_parser("catalog", help="List every table (static catalog; metadata SQL is not supported by the service).")
+    catalog_p = subparsers.add_parser("catalog", help="List tables + one-line descriptions. Optional --market us|cn.")
+    catalog_p.add_argument("--market", choices=["us", "cn"], help="Filter to one market.")
     catalog_p.add_argument("--report", action="store_true", help="Include exact command and HTTP result.")
     catalog_p.set_defaults(func=cmd_catalog)
 
-    schema_p = subparsers.add_parser("schema", help="Show one table's columns via SELECT * LIMIT 1 (DESCRIBE is not supported).")
-    schema_p.add_argument("table", help="Schema-qualified table name, e.g. cn.bars_1m.")
+    schema_p = subparsers.add_parser("schema", help="Live column schemas (name/type/doc) for one or more tables.")
+    schema_p.add_argument("tables", nargs="+", help="Schema-qualified table names, e.g. cn.daily_basic us.eod.")
     schema_p.add_argument("--report", action="store_true", help="Include exact command and HTTP result.")
     schema_p.set_defaults(func=cmd_schema)
 

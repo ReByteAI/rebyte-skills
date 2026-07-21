@@ -19,11 +19,11 @@ with identical auth.
 
 ## Discovering what's available
 
-The full 19-table catalog (US + CN: bars, fundamentals, news, splits,
+The full table catalog (US + CN: bars, fundamentals, news, splits,
 dividends, short data, money flow, …) lives in `../../data/SKILL.md` — read it
 before assuming a dataset doesn't exist.
 
-> **IMPORTANT:** `SHOW TABLES`, `DESCRIBE`, and `information_schema` queries
+> **IMPORTANT:** discover tables with `financial/catalog` and columns with `financial/schema` (both live). `SHOW TABLES`, `DESCRIBE`, and `information_schema` queries
 > are not supported by the service and fail. Use the static catalog in
 > `../../data/SKILL.md` for table names and `SELECT * FROM <table> LIMIT 1`
 > for columns. Coverage checks are plain SQL:
