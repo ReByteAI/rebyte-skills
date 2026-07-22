@@ -1,14 +1,14 @@
 [![Run on Rebyte](https://raw.githubusercontent.com/ReByteAI/run-any-skill-with-single-click/main/badge-v3.svg)](https://app.rebyte.ai/new?prompt=Use%20the%20anyfinancial%20skill.%20List%20the%20catalog%2C%20read%20a%20table%20schema%2C%20and%20run%20a%20small%20LIMIT%20query.)
 
-# Backtesting Historical Data Access
+# Financial Data Access
 
-Read-only SQL access to Rebyte Financial Data Service through the Relay Data API
-(`https://api.rebyte.ai/api/data/financial`).
+Recent-price and read-only historical data access through the Relay Data API
+(`https://api.rebyte.ai/api/data`).
 
-This directory is the historical data access layer for the stock-analysis
-**Backtesting** pillar. Use it to discover tables, read schemas, pull price bars,
-and validate data coverage before or during backtest execution. Analysis-only templates live
-under `../financial-templates/`.
+This directory defines data access for stock analysis and backtesting. Direct
+price APIs provide the current and previous exchange-local calendar dates;
+the Financial Data Service provides historical prices and every non-price
+dataset. Read `SKILL.md` for the routing rules and exact request shapes.
 
 The API is market-agnostic: it exposes a single catalog of tables and a read-only
 SQL endpoint. Whatever tables the service holds appear in the catalog — the skill
@@ -17,7 +17,7 @@ does not special-case any market.
 Inside a Rebyte VM/workspace the skill and CLI read the sandbox token and relay URL
 from `/home/user/.rebyte.ai/auth.json`.
 
-## Workflow: catalog → schema → query
+## Historical-lake workflow: catalog → schema → query
 
 ```bash
 # 1. List every table + its description (financial/catalog; optional --market us|cn)

@@ -1,13 +1,13 @@
 ---
-version: 2
+version: 3
 name: stock-analysis
-description: "The single financial skill: stock and company analysis plus strategy backtesting, on the Rebyte financial data lake (US equities + China A-shares). Covers price history, technical analysis, company research, news, fundamentals, dividends/splits, insider trading via SEC EDGAR, multi-stock comparison, and NautilusTrader backtesting with a first-class result bundle. Use when the user mentions stock tickers, stock prices, company analysis, investment research, financial data, or wants to backtest a strategy. Triggers: stock symbol (AAPL, TSLA, 000001.SZ), 'stock price', 'analyze stock', 'compare stocks', 'company financials', 'insider trading', 'SEC filing', 'is X a good buy', 'price history', 'backtest', '回测'. Do NOT use for full-blown multi-source research reports (use financial-deep-research instead)."
+description: "The single financial skill for stock and company analysis plus strategy backtesting. Uses direct recent-price APIs for the current and previous exchange-local calendar dates, and the Rebyte financial data lake for historical prices, news, fundamentals, dividends/splits, screening, and backtests across US equities and China A-shares. Also covers SEC EDGAR insider/filing research and multi-stock comparison. Use for stock tickers, current/latest prices, price history, technical or company analysis, investment research, financial data, and strategy backtests. Triggers include AAPL, TSLA, 000001.SZ, 'stock price', 'today', 'latest price', 'analyze stock', 'compare stocks', 'company financials', 'insider trading', 'SEC filing', 'is X a good buy', 'backtest', and '回测'. Do NOT use for full multi-source research reports (use financial-deep-research instead)."
 ---
 
 # Stock Analysis
 
-Stock and company analysis plus strategy backtesting on the Rebyte financial
-data lake.
+Stock and company analysis plus strategy backtesting using direct recent-price
+feeds and the Rebyte financial data lake.
 
 **Requires Rebyte API auth** — `$AUTH_TOKEN` and `$API_URL` are set up per the
 agent's system prompt; use them as Bearer token and base URL.
@@ -17,7 +17,7 @@ agent's system prompt; use them as Bearer token and base URL.
 | Pillar | When |
 |---|---|
 | this file | Analysis playbooks: price checks, company overviews, comparisons, fundamentals, technicals |
-| [`data/SKILL.md`](data/SKILL.md) | Data access mechanics: full 19-table catalog (US + CN), SQL patterns, semantic news search, error rules. **Read before writing SQL.** |
+| [`data/SKILL.md`](data/SKILL.md) | Data routing and mechanics: direct two-date prices, full 19-table lake catalog (US + CN), SQL patterns, semantic news search, error rules. **Read before fetching data.** |
 | [`backtesting/SKILL.md`](backtesting/SKILL.md) | Strategy simulation: 5-phase NautilusTrader workflow ending in a backtest result bundle |
 | [`financial-templates/SKILL.md`](financial-templates/SKILL.md) | Analysis structures (DCF, comps, memo formats) with no data calls |
 | [`report-style/README.md`](report-style/README.md) | Kami design system for every HTML report this skill delivers |
@@ -30,26 +30,33 @@ Lightweight Charts).
 
 | Source | What it provides | Access |
 |--------|-----------------|--------|
+| **Direct recent-price APIs** | Price-only OHLCV bars for the current and previous exchange-local calendar dates. US minute bars use `stocks/bars` with `interval: "1min"`; China minute bars use `cn-stocks/bars_1min`. | `POST $API_URL/api/data/stocks/bars`, `POST $API_URL/api/data/cn-stocks/bars`, or `POST $API_URL/api/data/cn-stocks/bars_1min` — see `data/SKILL.md` |
 | **Rebyte financial data lake** | US: daily + 1-minute bars, news (semantic-searchable), SEC-filing fundamentals, splits, dividends, short data, ticker universe, IPOs. CN A-shares: daily + 1-minute bars, valuation snapshots, financial statements, money flow, unusual-move disclosures. | Read-only SQL via `POST $API_URL/api/data/financial/sql` — see `data/SKILL.md` |
 | **SEC EDGAR** | Full filing text (10-K, 10-Q, 8-K), filing sections, insider (Form 4) trades | `edgartools` Python library — see `references/sec-edgar.md` |
 
-**Freshness — the lake is historical (T+1).** Daily tables land the prior
-trading day; intraday is delayed. There is no realtime feed: answer "current
-price" questions with the latest available bar and **state its date**. Never
-invent fresher data.
+**Route by freshness.** Use the direct APIs for "current", "today", "latest
+price", and recent intraday questions. Their range is fixed server-side to the
+current and previous calendar dates in `America/New_York` (US) or
+`Asia/Shanghai` (CN); callers cannot widen it. Use the lake for every older or
+non-price fact. The US response exposes Polygon's `upstreamStatus` (for example
+`DELAYED`), so never imply tick-level realtime. State the source, returned date
+range, latest bar timestamp, and feed status when present. During market hours,
+use minute bars in both markets; treat the current date's daily bar as final
+only after that market closes.
 
 ---
 
 ## Analysis Workflows
 
-All data steps below are lake SQL (recipes in the next section).
+Use direct prices for the two-date edge and lake SQL for historical or
+non-price steps. Exact routing and request shapes are in `data/SKILL.md`.
 
 ### 1. Quick Stock Check
 ```
 User: "What's AAPL doing?" / "AAPL price"
-→ Latest daily bars (last 1 month) — quote the last close and its date
-→ Ticker details
-→ Present: last close + date, recent trend, basic company info
+→ Direct recent bars — quote the latest close, timestamp, date range, feed status
+→ Lake daily bars (last 1 month) + ticker details for context
+→ Present: latest direct price + recent trend + basic company info
 ```
 
 ### 2. Company Overview
@@ -57,6 +64,7 @@ User: "What's AAPL doing?" / "AAPL price"
 User: "Tell me about NVDA" / "What does Tesla do?"
 → Ticker details + latest fundamentals period (revenue, net income)
 → Daily bars (last 3 months)
+→ Direct recent bars when presenting a latest/current price
 → Recent news (5 headlines) — semantic search for themes if needed
 → Present: business summary, market position, recent performance, news themes
 ```
@@ -65,7 +73,8 @@ User: "Tell me about NVDA" / "What does Tesla do?"
 ```
 User: "Is TSLA a good buy?" / "AAPL technical analysis"
 → Daily bars (last 6 months) — trend, support/resistance
-→ 1-minute bars aggregated to hourly (last 5 trading days) — short-term momentum
+→ Direct recent intraday bars — current short-term momentum
+→ Lake 1-minute bars aggregated to hourly when more than two dates are needed
 → Recent news (10 articles) — read and judge the tone yourself
 → Compute: moving averages, price range, volume trends
 → Present: trend direction, key levels, volume analysis, sentiment, outlook
@@ -75,6 +84,7 @@ User: "Is TSLA a good buy?" / "AAPL technical analysis"
 ```
 User: "Compare AAPL vs MSFT vs GOOGL"
 → One SQL per dataset covering all tickers (WHERE ticker IN (...))
+→ Direct recent bars for each ticker when current prices are part of the comparison
 → Compare: price performance, fundamentals, news flow
 → Present: side-by-side table, relative performance
 ```
@@ -83,7 +93,7 @@ User: "Compare AAPL vs MSFT vs GOOGL"
 ```
 User: "AAPL financials" / "NVDA revenue trend"
 → Fundamentals: annual (5 periods) + quarterly (4 periods)
-→ Dividends (last 12) — history and implied yield vs latest close
+→ Dividends (last 12) — history and implied yield vs latest direct close
 → Weekly-aggregated bars (last 2 years) — long-term price context
 → Compute: revenue growth, margin trends, EPS trend, payout ratio
 → Optional: SEC EDGAR for full 10-K text
@@ -102,6 +112,7 @@ User: "Insider trading for TSLA" / "Are executives buying NVDA?"
 User: "Full analysis of MSFT" / "Due diligence on AMD"
 → Ticker details, 1y daily bars, annual + quarterly fundamentals,
   dividends, splits, 20 recent news items
+→ Direct recent bars for the current price snapshot
 → SEC EDGAR: latest 10-K, recent 8-Ks, Form 4 insider trades
 → Present: comprehensive report (Kami-styled HTML per report-style/)
 ```
@@ -127,12 +138,13 @@ User: "Backtest an SMA crossover on AAPL" / "验证我的策略"
 ## Trigger Patterns
 
 **ALWAYS fetch data when the user mentions any of these. Do NOT answer from
-memory — query the lake.**
+memory — route to the direct price API and/or lake as specified.**
 
 | User intent | Required actions |
 |------------|-----------------|
-| Stock symbol mentioned (AAPL, $TSLA, 000001.SZ) | Daily bars + ticker details |
-| "price", "chart", "how is X doing" | Daily bars (aggregate 1-minute bars for intraday granularity) |
+| Stock symbol mentioned (AAPL, $TSLA, 000001.SZ) | Direct recent bars + lake ticker details |
+| "current", "today", "latest price", "how is X doing" | Direct recent bars first; include `marketDateRange`, latest timestamp, and feed status |
+| Historical "price" or "chart" | Lake bars for the requested range; add direct bars only when the latest edge matters |
 | "news", "what's happening with" | News query (10+ items) or semantic search |
 | "analyze", "research", "tell me about" | Details + bars + news |
 | "compare", "vs", "versus" | All datasets for each stock, side-by-side |
@@ -263,11 +275,12 @@ questions, prefer the semantic search endpoint over keyword `ILIKE`.
 
 ### Presenting Results
 
-- Lead with the answer (bullish/bearish/neutral, last close + its date, key metric)
+- Lead with the answer (bullish/bearish/neutral, latest sourced close + timestamp, key metric)
 - Use tables for multi-stock comparisons
 - Include specific numbers with dates — never vague statements
 - Distinguish facts (from data) from analysis (your interpretation)
-- State the data date explicitly — the lake is T+1, not realtime
+- State each source and date range explicitly; report direct-feed status and
+  label lake data T+1
 - Long-form deliverables: Kami-styled HTML per `report-style/`
 
 ---
@@ -276,7 +289,12 @@ questions, prefer the semantic search endpoint over keyword `ILIKE`.
 
 - **US tickers UPPERCASE** (`AAPL`); **CN codes suffixed** (`000001.SZ`, `600519.SH`)
 - **All timestamps UTC**
-- **Data is T+1** — daily tables land the prior trading day; never present it as realtime
+- **Direct prices cover two exchange-local calendar dates only** — weekends and
+  holidays can yield empty dates; do not widen the direct request
+- **Lake data is T+1** — daily tables land the prior trading day
+- **Direct means recent, not guaranteed tick realtime** — during market hours,
+  use US `stocks/bars` with `interval: "1min"` and CN `cn-stocks/bars_1min`;
+  report Polygon's `upstreamStatus`, and use completed daily bars after close
 - **Coverage**: US from 2021-06 (bars) with reference data much deeper (splits 1978→, dividends 2000→); CN daily from 1990-12 — full catalog in `data/SKILL.md`
 - **SEC EDGAR is free** — no API key, but requires an identity string
 
@@ -286,5 +304,6 @@ questions, prefer the semantic search endpoint over keyword `ILIKE`.
 
 - **Full research reports** with 10+ sources, citations, methodology → use `financial-deep-research`
 - **Simple web lookup** ("What's Apple's website?") → use web search
-- **Realtime quotes / live trading** → not available; the lake is historical (T+1)
+- **Live trading, tick execution, bid/ask, or streaming quotes** → not supported;
+  direct prices are OHLCV bars and may be delayed
 - **Personal financial advice** → not qualified

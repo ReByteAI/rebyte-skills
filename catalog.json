@@ -148,7 +148,7 @@
     },
     {
       "name": "stock-analysis",
-      "description": "Comprehensive stock and company analysis with real market data. Covers price history, technical analysis, company research, news sentiment, SEC filings, insider trading, and multi-stock comparison. Use when user mentions stock tickers, asks about stock prices, company analysis, investment research, or financial data. Triggers: stock symbol (AAPL, TSLA), 'stock price', 'analyze stock', 'compare stocks', 'company financials', 'insider trading', 'SEC filing', 'is X a good buy', 'stock chart', 'price history'. Do NOT use for full-blown multi-source research reports (use financial-deep-research instead)."
+      "description": "The single financial skill for stock and company analysis plus strategy backtesting. Uses direct recent-price APIs for the current and previous exchange-local calendar dates, and the Rebyte financial data lake for historical prices, news, fundamentals, dividends/splits, screening, and backtests across US equities and China A-shares. Also covers SEC EDGAR insider/filing research and multi-stock comparison. Use for stock tickers, current/latest prices, price history, technical or company analysis, investment research, financial data, and strategy backtests. Triggers include AAPL, TSLA, 000001.SZ, 'stock price', 'today', 'latest price', 'analyze stock', 'compare stocks', 'company financials', 'insider trading', 'SEC filing', 'is X a good buy', 'backtest', and '回测'. Do NOT use for full multi-source research reports (use financial-deep-research instead)."
     },
     {
       "name": "super-extract",

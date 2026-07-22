@@ -25,8 +25,9 @@ claims, and do not replace source-grounded research.
 
 - Clearly label outputs from this pillar as **templates** or **analysis
   frameworks** unless populated with verified data.
-- If the user asks for prices, filings, news, or fundamentals, pull them from
-  the data lake first (`../data/SKILL.md`) and state the data date.
+- If the user asks for prices, filings, news, or fundamentals, follow
+  `../data/SKILL.md`: direct API for the two-date price edge, Data Lake for
+  historical and non-price facts. State every source and date range.
 - If the user asks for strategy performance, route to `../backtesting/SKILL.md`.
 - Do not invent financial figures. Use placeholders like `<Revenue>` or cite the
   data source used to fill them.

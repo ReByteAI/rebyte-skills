@@ -1,12 +1,16 @@
 ---
 name: data
-description: Historical data access for the stock-analysis Backtesting pillar. Query the Rebyte Financial Data Service through the Relay Data API with read-only SQL, plus semantic search over historical news when needed for data exploration.
+description: Financial data access for stock-analysis. Use direct price APIs for the current and previous exchange-local calendar dates, and the Rebyte Financial Data Service for historical prices, news, fundamentals, screening, and backtesting through read-only SQL and semantic search.
 ---
 
-# Backtesting Historical Data Access
+# Financial Data Access
 
-Access to Rebyte Financial Data Service through the Relay Data API
-(`/api/data/financial`). Two modes:
+Access financial data through the Relay Data API. Three modes:
+
+- **Direct recent prices** — price-only OHLCV bars across the current and
+  previous exchange-local calendar dates. Use `/stocks/bars` for US equities,
+  `/cn-stocks/bars` for CN daily bars, and `/cn-stocks/bars_1min` for CN minute
+  bars. The server owns the date range; callers cannot widen it.
 
 - **SQL** (`/sql`) — read-only analytical SQL over every table (see the
   SQL patterns below for what works). Work in three steps:
@@ -15,14 +19,26 @@ Access to Rebyte Financial Data Service through the Relay Data API
   carry content embeddings (currently news). Query by *meaning*, not keywords.
   This is data access, not a separate News subcommand.
 
-This sub-skill belongs to the **Backtesting** pillar. Use it to discover tables,
-inspect schemas, pull bars, validate coverage, or explore historical context
-needed before a simulation. For analysis structures without API calls, use
-`../financial-templates/SKILL.md`.
+Use this sub-skill for both analysis and the **Backtesting** pillar: fetch recent
+prices, discover lake tables, inspect schemas, pull historical bars, validate
+coverage, or explore historical context. For analysis structures without API
+calls, use `../financial-templates/SKILL.md`.
 
-The lake is the ONLY data source: daily tables land the prior trading day and
-intraday is delayed. There is no realtime feed — answer "current" questions
-with the latest available bar and state its date; never invent fresher data.
+## Route by freshness
+
+- For "current", "today", "latest price", and recent intraday requests, call
+  the direct price API first. During market hours, use US `stocks/bars` with
+  `interval: "1min"` and CN `cn-stocks/bars_1min`.
+- For ranges older than two exchange-local calendar dates and for every
+  non-price fact, use the data lake.
+- For analysis needing both current price and historical context, use both
+  sources. Keep their provenance separate; if combining bars, de-duplicate by
+  ticker and timestamp.
+- Direct APIs are not streaming quote or execution feeds. State the returned
+  `marketDateRange`, latest bar timestamp, and Polygon `upstreamStatus` when
+  present. Never call delayed OHLCV tick-level realtime.
+- Weekends and holidays can leave one or both direct dates empty. Do not widen
+  the direct window; use the lake for older context.
 
 ## Authentication
 
@@ -34,7 +50,58 @@ API_URL="${API_URL:-https://api.rebyte.ai}"
 
 If `AUTH_TOKEN` is empty or `null`, report that authentication is unavailable and stop. Do not invent credentials.
 
-## 1. The catalog — what tables exist
+## Direct recent-price APIs
+
+These endpoints accept identifiers and intervals only. Do not send `from`,
+`to`, `start_date`, `end_date`, or `trade_date`; the Relay derives the two-date
+window in the exchange's time zone.
+
+### US equities
+
+```bash
+curl -fsS -X POST "$API_URL/api/data/stocks/bars" \
+  -H "Authorization: Bearer $AUTH_TOKEN" -H "Content-Type: application/json" \
+  -d '{"ticker":"AAPL","interval":"5min"}' | jq '.'
+```
+
+Intervals: `1min`, `5min`, `15min`, `30min`, `1hour`, `4hour`, `1day`.
+Response: `{ ticker, marketDateRange: { from, to }, upstreamStatus, count,
+bars: [{ t, o, h, l, c, v, vw, n }] }`. Treat `upstreamStatus: "DELAYED"` as
+delayed data and say so. For an intraday/current-price check before the US
+close, use `interval: "1min"`; the current date's `1day` bar is not a completed
+closing bar until the market closes.
+
+### China A-shares
+
+Daily bars for one stock (omit `ts_code` only when the whole market is truly
+needed):
+
+```bash
+curl -fsS -X POST "$API_URL/api/data/cn-stocks/bars" \
+  -H "Authorization: Bearer $AUTH_TOKEN" -H "Content-Type: application/json" \
+  -d '{"ts_code":"000001.SZ"}' | jq '.'
+```
+
+One-minute bars for one stock:
+
+```bash
+curl -fsS -X POST "$API_URL/api/data/cn-stocks/bars_1min" \
+  -H "Authorization: Bearer $AUTH_TOKEN" -H "Content-Type: application/json" \
+  -d '{"ts_code":"000001.SZ"}' | jq '.'
+```
+
+Both return `{ success, marketDateRange: { from, to }, rows, rowCount,
+elapsedMs }`. For an intraday/current-price check before the CN close, use
+`bars_1min`; the current date's daily `bars` row is available only after market
+close. This is the same minute-during-session rule as US. The direct providers
+expose prices only: use the lake for news, fundamentals, company details,
+valuation, dividends, splits, and screening.
+
+## Historical data lake
+
+Use the three-step flow below for historical and non-price data.
+
+### 1. The catalog — what tables exist
 
 `financial/catalog` returns every table and a one-line description of what it
 is. Filter to a market with `market` = `us` (US equities) or `cn` (China
@@ -59,7 +126,7 @@ English, CN descriptions are Chinese.
 > `information_schema` queries are not a reliable discovery path here. Use
 > `catalog` for tables and `schema` (below) for columns — never guess.
 
-## 2. Get a table's columns — before querying it
+### 2. Get a table's columns — before querying it
 
 `financial/schema` returns the live column list for one or more tables — each
 column's `name`, `type`, and a human `doc` (US-English / CN-Chinese). This is
@@ -86,7 +153,7 @@ prior trading day (T+1); intraday is delayed. The 1-minute bar tables
 of seconds, so keep the window narrow (one ticker, days not months) and allow a
 generous client timeout.
 
-## 3. Query
+### 3. Query
 
 ```bash
 python3 scripts/anyfinancial_cli.py query "SELECT trade_time, o, h, l, c, v FROM cn.bars_1m WHERE ts_code = '000001.SZ' ORDER BY trade_time DESC LIMIT 10"
