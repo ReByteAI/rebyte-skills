@@ -39,7 +39,7 @@ python3 build.py refresh --since 2023-03-15  # backfill from a date
 # Local counts, freshness, watermark
 python3 build.py status
 
-# Read-only SQL over the local mirror (same guard as the anyfinancial CLI)
+# Read-only SQL over the local mirror (same guard as the financial CLI)
 python3 build.py sql "SELECT published_utc, title FROM news ORDER BY published_utc DESC LIMIT 5"
 
 # Semantic search: find articles similar to a seed article (works today)

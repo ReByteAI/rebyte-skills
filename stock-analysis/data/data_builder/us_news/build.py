@@ -12,7 +12,7 @@ Design notes
 ------------
 * Source of truth is the served ``us.news`` table, reached through the same
   ``/api/data/financial/sql`` endpoint and the same auth resolution as
-  ``scripts/anyfinancial_cli.py`` (imported here, single source of truth).
+  ``scripts/financial_cli.py`` (imported here, single source of truth).
 * ``refresh`` is incremental: it keyset-paginates by ``(published_utc, id)``
   from a stored watermark, so re-runs only pull genuinely new rows.
 * Embeddings are fetched **only for ids not already embedded locally**
@@ -48,7 +48,7 @@ _SCRIPTS = os.path.normpath(os.path.join(_HERE, "..", "..", "scripts"))
 if _SCRIPTS not in sys.path:
     sys.path.insert(0, _SCRIPTS)
 
-import anyfinancial_cli as af  # noqa: E402
+import financial_cli as af  # noqa: E402
 
 try:
     import numpy as np  # optional, only speeds up cosine
@@ -430,7 +430,7 @@ def cmd_search(args: argparse.Namespace) -> int:
 # --------------------------------------------------------------------------- #
 def cmd_sql(args: argparse.Namespace) -> int:
     sql = args.sql or sys.stdin.read()
-    af._validate_read_only_sql(sql)  # same read-only guard as the anyfinancial CLI
+    af._validate_read_only_sql(sql)  # same read-only guard as the financial CLI
     conn = connect()
     try:
         rows = [dict(r) for r in conn.execute(sql).fetchall()]
