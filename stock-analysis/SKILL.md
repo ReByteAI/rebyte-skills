@@ -1,7 +1,7 @@
 ---
 version: 3
 name: stock-analysis
-description: "The single financial skill for stock and company analysis plus strategy backtesting. Uses direct recent-price APIs for the current and previous exchange-local calendar dates, and the Rebyte financial data lake for historical prices, news, fundamentals, dividends/splits, screening, and backtests across US equities and China A-shares. Also covers SEC EDGAR insider/filing research and multi-stock comparison. Use for stock tickers, current/latest prices, price history, technical or company analysis, investment research, financial data, and strategy backtests. Triggers include AAPL, TSLA, 000001.SZ, 'stock price', 'today', 'latest price', 'analyze stock', 'compare stocks', 'company financials', 'insider trading', 'SEC filing', 'is X a good buy', 'backtest', and '回测'. Do NOT use for full multi-source research reports (use financial-deep-research instead)."
+description: "The single financial skill for stock and company analysis plus strategy backtesting. Uses direct recent-price APIs for the current and previous exchange-local calendar dates, and the Rebyte financial data lake for historical prices, news, fundamentals, dividends/splits, screening, and backtests across US equities and China A-shares. Also covers SEC EDGAR insider/filing research and multi-stock comparison. Use for stock tickers, current/latest prices, price history, technical or company analysis, investment research, financial data, and strategy backtests. Triggers include AAPL, TSLA, 000001.SZ, 'stock price', 'today', 'latest price', 'analyze stock', 'compare stocks', 'company financials', 'insider trading', 'SEC filing', 'is X a good buy', 'backtest', and '回测'."
 ---
 
 # Stock Analysis
@@ -17,7 +17,7 @@ agent's system prompt; use them as Bearer token and base URL.
 | Pillar | When |
 |---|---|
 | this file | Analysis playbooks: price checks, company overviews, comparisons, fundamentals, technicals |
-| [`data/SKILL.md`](data/SKILL.md) | Data routing and mechanics: direct two-date prices, full 19-table lake catalog (US + CN), SQL patterns, semantic news search, error rules. **Read before fetching data.** |
+| [`data/SKILL.md`](data/SKILL.md) | Data routing and mechanics: direct two-date prices, full 19-table lake catalog (US + CN), SQL patterns, news + paid-research search, error rules. **Read before fetching data.** |
 | [`backtesting/SKILL.md`](backtesting/SKILL.md) | Strategy simulation: 5-phase NautilusTrader workflow ending in a backtest result bundle |
 | [`financial-templates/SKILL.md`](financial-templates/SKILL.md) | Analysis structures (DCF, comps, memo formats) with no data calls |
 | [`report-style/README.md`](report-style/README.md) | Kami design system for every HTML report this skill delivers |
@@ -31,7 +31,9 @@ Lightweight Charts).
 | Source | What it provides | Access |
 |--------|-----------------|--------|
 | **Direct recent-price APIs** | Price-only OHLCV bars for the current and previous exchange-local calendar dates. US minute bars use `stocks/bars` with `interval: "1min"`; China minute bars use `cn-stocks/bars_1min`. | `POST $API_URL/api/data/stocks/bars`, `POST $API_URL/api/data/cn-stocks/bars`, or `POST $API_URL/api/data/cn-stocks/bars_1min` — see `data/SKILL.md` |
-| **Rebyte financial data lake** | US: daily + 1-minute bars, news (semantic-searchable), SEC-filing fundamentals, splits, dividends, short data, ticker universe, IPOs. CN A-shares: daily + 1-minute bars, valuation snapshots, financial statements, money flow, unusual-move disclosures. | Read-only SQL via `POST $API_URL/api/data/financial/sql` — see `data/SKILL.md` |
+| **Rebyte financial data lake** | US: daily + 1-minute bars, news, SEC-filing fundamentals, splits, dividends, short data, ticker universe, IPOs. CN A-shares: daily + 1-minute bars, valuation snapshots, financial statements, money flow, unusual-move disclosures. | Read-only SQL via `POST $API_URL/api/data/financial/sql` — see `data/SKILL.md` |
+| **News archive** | US equity news coverage back to 2016, searchable by meaning | `POST $API_URL/api/data/research/news` — see `data/SKILL.md` |
+| **Paid research library** | ~4,300 long-form articles from 13 subscriber-only investment newsletters (SemiAnalysis, SemiVision, MacroCharts, Capital Wars, Citrini, Doomberg, Michael J Burry and others), 2020 to today. Primary analysis behind paywalls that web search cannot reach — use it for theses, debates, and mechanisms. | `POST $API_URL/api/data/research/search`, then `/context` or `/article` — see `data/SKILL.md` |
 | **SEC EDGAR** | Full filing text (10-K, 10-Q, 8-K), filing sections, insider (Form 4) trades | `edgartools` Python library — see `references/sec-edgar.md` |
 
 **Route by freshness.** Use the direct APIs for "current", "today", "latest
@@ -183,8 +185,8 @@ GROUP BY bucket ORDER BY bucket
 SELECT published_utc, title, tickers FROM us.news
 WHERE array_has(tickers, 'AAPL')
 ORDER BY published_utc DESC LIMIT 10
--- Thematic retrieval ("news about AI chip demand"): use the semantic /search
--- endpoint instead of ILIKE — see data/SKILL.md.
+-- Thematic retrieval ("news about AI chip demand"): use research/news instead
+-- of ILIKE; for theses and mechanisms use research/search — see data/SKILL.md.
 
 -- Fundamentals (SEC-filing derived; is_* income, bs_* balance, cf_* cashflow)
 SELECT fiscal_year, fiscal_period, is_revenues, is_gross_profit,
@@ -215,13 +217,14 @@ SELECT trade_date, pe_ttm, pb, turnover_rate, total_mv FROM cn.daily_basic
 WHERE ts_code = '000001.SZ' ORDER BY trade_date DESC LIMIT 20
 ```
 
-The `data/scripts/anyfinancial_cli.py` helper wraps auth + the SQL endpoint:
+The `data/scripts/financial_cli.py` helper wraps auth + the SQL endpoint:
 
 ```bash
-python3 data/scripts/anyfinancial_cli.py catalog
-python3 data/scripts/anyfinancial_cli.py schema us.eod
-python3 data/scripts/anyfinancial_cli.py query "SELECT ... LIMIT 10"
-python3 data/scripts/anyfinancial_cli.py search "Fed rate cut expectations" --columns title,published_utc
+python3 data/scripts/financial_cli.py catalog
+python3 data/scripts/financial_cli.py schema us.eod
+python3 data/scripts/financial_cli.py query "SELECT ... LIMIT 10"
+python3 data/scripts/financial_cli.py news "Fed rate cut expectations" --ticker NVDA
+python3 data/scripts/financial_cli.py research "global liquidity and central bank balance sheets"
 ```
 
 ---
@@ -302,7 +305,6 @@ questions, prefer the semantic search endpoint over keyword `ILIKE`.
 
 ## When NOT to Use This Skill
 
-- **Full research reports** with 10+ sources, citations, methodology → use `financial-deep-research`
 - **Simple web lookup** ("What's Apple's website?") → use web search
 - **Live trading, tick execution, bid/ask, or streaming quotes** → not supported;
   direct prices are OHLCV bars and may be delayed

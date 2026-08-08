@@ -1,23 +1,25 @@
 ---
 name: data
-description: Financial data access for stock-analysis. Use direct price APIs for the current and previous exchange-local calendar dates, and the Rebyte Financial Data Service for historical prices, news, fundamentals, screening, and backtesting through read-only SQL and semantic search.
+description: Financial data access for stock-analysis. Use direct price APIs for the current and previous exchange-local calendar dates, and the Rebyte Financial Data Service for historical prices, fundamentals, screening, and backtesting through read-only SQL, plus meaning-based search over news and a library of paid investment research.
 ---
 
 # Financial Data Access
 
-Access financial data through the Relay Data API. Three modes:
+Access financial data through the Relay Data API. Four modes:
 
 - **Direct recent prices** — price-only OHLCV bars across the current and
   previous exchange-local calendar dates. Use `/stocks/bars` for US equities,
   `/cn-stocks/bars` for CN daily bars, and `/cn-stocks/bars_1min` for CN minute
   bars. The server owns the date range; callers cannot widen it.
 
-- **SQL** (`/sql`) — read-only analytical SQL over every table (see the
+- **SQL** (`financial/sql`) — read-only analytical SQL over every table (see the
   SQL patterns below for what works). Work in three steps:
   **catalog → schema → query.**
-- **Semantic search** (`/search`) — vector search over historical datasets that
-  carry content embeddings (currently news). Query by *meaning*, not keywords.
-  This is data access, not a separate News subcommand.
+- **News search** (`research/news`) — search US equity news coverage by
+  *meaning*, not keywords. This is data access, not a separate News subcommand.
+- **Research search** (`research/search`) — search a library of paid,
+  subscriber-only investment newsletters. Use it for theses and mechanisms;
+  use news for events.
 
 Use this sub-skill for both analysis and the **Backtesting** pillar: fetch recent
 prices, discover lake tables, inspect schemas, pull historical bars, validate
@@ -109,8 +111,8 @@ A-shares); omit it for both. Call this first, then pull columns for the tables
 you actually need (step 2).
 
 ```bash
-python3 scripts/anyfinancial_cli.py catalog            # both markets
-python3 scripts/anyfinancial_cli.py catalog --market cn
+python3 scripts/financial_cli.py catalog            # both markets
+python3 scripts/financial_cli.py catalog --market cn
 ```
 
 ```bash
@@ -134,7 +136,7 @@ the source of truth for column names and meanings; it is always current, so
 never guess column names and never hardcode them.
 
 ```bash
-python3 scripts/anyfinancial_cli.py schema cn.daily_basic us.eod
+python3 scripts/financial_cli.py schema cn.daily_basic us.eod
 ```
 
 ```bash
@@ -156,7 +158,7 @@ generous client timeout.
 ### 3. Query
 
 ```bash
-python3 scripts/anyfinancial_cli.py query "SELECT trade_time, o, h, l, c, v FROM cn.bars_1m WHERE ts_code = '000001.SZ' ORDER BY trade_time DESC LIMIT 10"
+python3 scripts/financial_cli.py query "SELECT trade_time, o, h, l, c, v FROM cn.bars_1m WHERE ts_code = '000001.SZ' ORDER BY trade_time DESC LIMIT 10"
 ```
 
 ```bash
@@ -165,32 +167,69 @@ curl -fsS -X POST "$API_URL/api/data/financial/sql" \
   -d '{"sql":"SELECT trade_time, c FROM cn.bars_1m WHERE ts_code = '\''000001.SZ'\'' ORDER BY trade_time DESC LIMIT 10","parameters":[]}' | jq '.'
 ```
 
-## Semantic search — find news by meaning (not keywords)
+## Search — find writing by meaning (not keywords)
 
-For news, prefer semantic search over `... WHERE content ILIKE '%...%'`. You send a
-natural-language `text`; the service embeds it server-side and returns the most
-similar rows ranked by `_score` (higher = more relevant). No keys, no embedding on
-your side.
+Never hunt text with `... WHERE content ILIKE '%...%'`. Send a natural-language
+`text`; the service embeds it server-side and ranks by meaning *and* exact terms,
+so tickers and paraphrases both work. No keys, no embedding on your side.
+
+### News — what happened
+
+US equity news coverage going back to 2016.
 
 ```bash
-python3 scripts/anyfinancial_cli.py search "Fed rate cut expectations" --columns title,published_utc,tickers
+python3 scripts/financial_cli.py news "Fed rate cut expectations" --ticker NVDA --recent
 ```
 
 ```bash
-curl -fsS -X POST "$API_URL/api/data/financial/search" \
+curl -fsS -X POST "$API_URL/api/data/research/news" \
   -H "Authorization: Bearer $AUTH_TOKEN" -H "Content-Type: application/json" \
-  -d '{"text":"Fed rate cut expectations","datasets":["us.news"],"limit":5,"additional_columns":["title","published_utc","tickers"]}' | jq '.'
+  -d '{"text":"Fed rate cut expectations","ticker":"NVDA","limit":5}' | jq '.'
 ```
 
-Body fields: `text` (required, natural language) · `datasets` (default `["us.news"]`
-— the only dataset with embeddings today) · `limit` (default 5) · `additional_columns`
-(optional extra columns returned in each result's `data`).
+Body: `text` (required) · `ticker` · `since`/`until` (ISO dates) · `sort`
+(`relevance` default, or `recent`) · `limit` (default 5, max 25).
+Each result: `id`, `title`, `published_at`, `tickers`, `score`, `snippet`.
 
-Each result: `_score` (similarity), `matches.content` (hit snippets), `data` (the
-columns you named in `additional_columns`), `dataset`.
+### Research — what it means
 
-> Only `us.news` is searchable today. Other tables are SQL-only — use the three-step
-> SQL flow above for them.
+A library of paid, subscriber-only investment newsletters: ~4,300 long-form
+articles from 13 publications, 2020 to today, including SemiAnalysis and
+SemiVision (semiconductors, datacenter buildout), MacroCharts and Capital Wars
+(global liquidity, cycles), Citrini (thematic trades), Doomberg (energy and
+commodities), and Michael J Burry. This is primary analysis behind paywalls that
+a web search cannot reach — reach for it on any thesis, debate, or mechanism
+question, before falling back on general knowledge.
+
+```bash
+python3 scripts/financial_cli.py research "global liquidity and central bank balance sheets"
+```
+
+```bash
+curl -fsS -X POST "$API_URL/api/data/research/search" \
+  -H "Authorization: Bearer $AUTH_TOKEN" -H "Content-Type: application/json" \
+  -d '{"text":"global liquidity and central bank balance sheets","limit":5}' | jq '.'
+```
+
+Body: `text` (required) · `channel` · `since`/`until` · `limit` (default 5, max 25).
+Each result: `channel`, `slug`, `chunk_index`, `title`, `published_at`, `score`,
+`snippet`. Filter one publication with `channel`: `semianalysis`, `semivision`,
+`macrocharts`, `capitalwars`, `citrini`, `doomberg`, `michaeljburry`, `fundaai`,
+`photoncap`, `jamesbulltard`, `viksnewsletter`, `asymmetricalbets`, `damnang`.
+Search unfiltered first — you usually want the best argument, not one author's.
+
+A hit is one **section** of an article. Before quoting it as anyone's position,
+read around it — a section often states a view the author goes on to demolish:
+
+```bash
+python3 scripts/financial_cli.py context capitalwars <slug> 2 --radius 1   # neighbouring sections
+python3 scripts/financial_cli.py article capitalwars <slug>                # the whole piece
+```
+
+Cite publication and publication date whenever you use a result.
+
+> Search covers news and research articles. Every other table is SQL-only — use
+> the three-step SQL flow above for them.
 
 ## SQL patterns
 

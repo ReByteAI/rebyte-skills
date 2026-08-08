@@ -11,7 +11,6 @@ Produce podcast episodes from scratch or from source material. This skill handle
 ## Sub-Skills
 
 - `rebyteai/internet-search` — Quick web search for facts, quotes, and current data
-- `rebyteai/deep-research` — Comprehensive multi-source research for in-depth topics
 - `rebyteai/text-to-speech` — TTS synthesis (voices, style, dialogue)
 - `rebyteai/show-me-how` — Interactive widgets for the episode preview
 
@@ -31,7 +30,7 @@ Parse what the user wants:
 Skip if the user provides source material (uploaded document, pasted text, etc.).
 
 - **News/current events** — Use `internet-search` for 3-5 targeted searches.
-- **Deep topic** — Use `deep-research` for comprehensive multi-source coverage.
+- **Deep topic** — Use `internet-search` for comprehensive multi-source coverage.
 - **Debate/discussion** — Research both sides with `internet-search`.
 
 Organize findings into an outline: group by segment, note quotes/stats, identify narrative arc.

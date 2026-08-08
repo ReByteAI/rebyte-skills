@@ -27,7 +27,7 @@ results sneak in.
 ```
 Phase 1  SETUP        install + verify the engine
 Phase 2  PARAMETERS   ask the user the forms below, write <run>.config.json
-Phase 3  DATA         fetch bars via anyfinancial, validate coverage
+Phase 3  DATA         fetch bars via the data sub-skill, validate coverage
 Phase 4  EXECUTE      run in-sample, then out-of-sample, in NautilusTrader
 Phase 5  REPORT       markdown summary + backtest bundle at /code/backtests/<slug>/
 ```
@@ -153,7 +153,7 @@ cp config.example.json smoke.config.json
 
 ---
 
-## Phase 3 — Data selection via anyfinancial
+## Phase 3 — Data selection via the data sub-skill
 
 **Goal:** validated local bars for every ticker.
 
@@ -162,11 +162,11 @@ cp config.example.json smoke.config.json
 python scripts/fetch_data.py --config <run>.config.json      # --force to re-pull
 ```
 Pulls the config's tickers/range into `data_cache/` as CSV, from the
-anyfinancial SQL service (`1day → us.eod`, `1min → us.bars_1m`). To explore
-what's available first, use the anyfinancial workflow directly:
+financial data lake SQL service (`1day → us.eod`, `1min → us.bars_1m`). To explore
+what's available first, use the data sub-skill workflow directly:
 ```bash
-python3 ../data/scripts/anyfinancial_cli.py catalog
-python3 ../data/scripts/anyfinancial_cli.py schema us.eod
+python3 ../data/scripts/financial_cli.py catalog
+python3 ../data/scripts/financial_cli.py schema us.eod
 ```
 Tables, SQL dialect, and data caveats: `references/data_sources.md`.
 
@@ -353,11 +353,11 @@ SKILL.md                      — this phase playbook
 config.example.json           — copy per run → <run>.config.json
 evals/evals.json              — sample tasks for skill testing (Skill Creator style)
 scripts/setup.sh              — Phase 1: install + verify
-scripts/fetch_data.py         — Phase 3: anyfinancial → local CSV cache
+scripts/fetch_data.py         — Phase 3: data lake → local CSV cache
 scripts/run_backtest.py       — Phase 4: config-driven runner (engine + report)
 scripts/run_workflow.sh       — setup → fetch → run wrapper for executable path
 strategies/sma_cross.py       — example strategy + the plug-in contract
 references/domain_knowledge.md — pitfalls, metrics, workflow (READ BEFORE Phase 2)
-references/data_sources.md     — anyfinancial tables, SQL, data caveats
+references/data_sources.md     — data lake tables, SQL, data caveats
 references/nautilus_patterns.md— engine assembly, wrangler trap, frictions
 ```

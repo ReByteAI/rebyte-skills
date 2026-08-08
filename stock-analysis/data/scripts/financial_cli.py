@@ -380,26 +380,15 @@ def _parse_csv_list(value: Optional[str]) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
-def cmd_search(args) -> None:
-    """Semantic (vector) search over datasets that carry content embeddings."""
-    text = args.text.strip() if args.text else ""
-    if not text:
-        print("Error: provide search text as an argument.", file=sys.stderr)
-        sys.exit(1)
-
+def _post_research(args, operation: str, payload: dict[str, Any]) -> None:
+    """POST one research operation and print the response."""
     api_url = _resolve_api_url(args)
     token = _resolve_token(args)
     if not token:
         print("Error: authentication token unavailable.", file=sys.stderr)
         sys.exit(1)
 
-    datasets = _parse_csv_list(args.datasets) or ["us.news"]
-    payload: dict[str, Any] = {"text": text, "datasets": datasets, "limit": args.limit}
-    columns = _parse_csv_list(args.columns)
-    if columns:
-        payload["additional_columns"] = columns
-
-    url = _endpoint(api_url, "financial/search")
+    url = _endpoint(api_url, operation)
     resp, body = _request_json("POST", url, token=token, payload=payload, timeout=args.timeout)
     if args.report:
         print("Command:")
@@ -410,17 +399,68 @@ def cmd_search(args) -> None:
         sys.exit(1)
 
 
+def _require_text(args) -> str:
+    text = args.text.strip() if args.text else ""
+    if not text:
+        print("Error: provide search text as an argument.", file=sys.stderr)
+        sys.exit(1)
+    return text
+
+
+def cmd_news(args) -> None:
+    """Hybrid keyword + semantic search over US equity news."""
+    payload: dict[str, Any] = {"text": _require_text(args), "limit": args.limit}
+    if args.ticker:
+        payload["ticker"] = args.ticker
+    if args.since:
+        payload["since"] = args.since
+    if args.until:
+        payload["until"] = args.until
+    if args.recent:
+        payload["sort"] = "recent"
+    _post_research(args, "research/news", payload)
+
+
+def cmd_research(args) -> None:
+    """Hybrid keyword + semantic search over the paid research library."""
+    payload: dict[str, Any] = {"text": _require_text(args), "limit": args.limit}
+    if args.channel:
+        payload["channel"] = args.channel
+    if args.since:
+        payload["since"] = args.since
+    if args.until:
+        payload["until"] = args.until
+    _post_research(args, "research/search", payload)
+
+
+def cmd_context(args) -> None:
+    """The sections surrounding one research hit."""
+    _post_research(args, "research/context", {
+        "channel": args.channel,
+        "slug": args.slug,
+        "chunk_index": args.chunk_index,
+        "radius": args.radius,
+    })
+
+
+def cmd_article(args) -> None:
+    """One research article, reassembled from its sections."""
+    _post_research(args, "research/article", {"channel": args.channel, "slug": args.slug})
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="anyfinancial",
+        prog="financial",
         description="CLI for Rebyte Financial Data Service. Workflow: catalog -> schema -> query.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "examples:\n"
-            "  anyfinancial catalog\n"
-            "  anyfinancial schema cn.bars_1m\n"
-            "  anyfinancial query \"SELECT * FROM cn.bars_1m LIMIT 10\" --report\n"
-            "  anyfinancial search \"Fed rate cut expectations\" --columns title,published_utc,tickers\n"
+            "  financial catalog\n"
+            "  financial schema cn.bars_1m\n"
+            "  financial query \"SELECT * FROM cn.bars_1m LIMIT 10\" --report\n"
+            "  financial news \"Fed rate cut expectations\" --ticker NVDA --recent\n"
+            "  financial research \"global liquidity and central bank balance sheets\"\n"
+            "  financial context capitalwars some-article-slug 2 --radius 1\n"
         ),
     )
     parser.add_argument("--api-url", help="Relay API base URL. Defaults to auth.json sandbox relay_url or https://api.rebyte.ai.")
@@ -444,16 +484,50 @@ def build_parser() -> argparse.ArgumentParser:
     query_p.add_argument("--report", action="store_true", help="Report command, HTTP result, rowCount, first 3 rows, and error.")
     query_p.set_defaults(func=cmd_query)
 
-    search_p = subparsers.add_parser(
-        "search",
-        help="Semantic (vector) search over embedding-backed datasets. POST /api/data/financial/search.",
+    news_p = subparsers.add_parser(
+        "news",
+        help="Keyword + semantic search over US equity news. POST /api/data/research/news.",
     )
-    search_p.add_argument("text", help="Natural-language query, e.g. \"Fed rate cut expectations\".")
-    search_p.add_argument("--datasets", help="Comma-separated datasets to search. Default: us.news (only dataset with embeddings today).")
-    search_p.add_argument("--limit", type=int, default=5, help="Max results to return. Default 5.")
-    search_p.add_argument("--columns", help="Comma-separated extra columns to include per result, e.g. title,published_utc,tickers.")
-    search_p.add_argument("--report", action="store_true", help="Include exact command and HTTP result.")
-    search_p.set_defaults(func=cmd_search)
+    news_p.add_argument("text", help="Natural-language query, e.g. \"Fed rate cut expectations\".")
+    news_p.add_argument("--ticker", help="Restrict to one ticker, e.g. AAPL.")
+    news_p.add_argument("--since", help="Published on or after this ISO date.")
+    news_p.add_argument("--until", help="Published on or before this ISO date.")
+    news_p.add_argument("--recent", action="store_true", help="Order by publication date instead of relevance.")
+    news_p.add_argument("--limit", type=int, default=5, help="Max results to return (1-25). Default 5.")
+    news_p.add_argument("--report", action="store_true", help="Include exact command and HTTP result.")
+    news_p.set_defaults(func=cmd_news)
+
+    research_p = subparsers.add_parser(
+        "research",
+        help="Search the paid research library. POST /api/data/research/search.",
+    )
+    research_p.add_argument("text", help="Natural-language query, e.g. \"global liquidity and central bank balance sheets\".")
+    research_p.add_argument("--channel", help="Restrict to one publication, e.g. semianalysis, citrini, doomberg.")
+    research_p.add_argument("--since", help="Published on or after this ISO date.")
+    research_p.add_argument("--until", help="Published on or before this ISO date.")
+    research_p.add_argument("--limit", type=int, default=5, help="Max results to return (1-25). Default 5.")
+    research_p.add_argument("--report", action="store_true", help="Include exact command and HTTP result.")
+    research_p.set_defaults(func=cmd_research)
+
+    context_p = subparsers.add_parser(
+        "context",
+        help="Read around a research hit. POST /api/data/research/context.",
+    )
+    context_p.add_argument("channel", help="From a research result.")
+    context_p.add_argument("slug", help="From a research result.")
+    context_p.add_argument("chunk_index", type=int, help="The section to centre on.")
+    context_p.add_argument("--radius", type=int, default=1, help="Sections to include on each side (0-5). Default 1.")
+    context_p.add_argument("--report", action="store_true", help="Include exact command and HTTP result.")
+    context_p.set_defaults(func=cmd_context)
+
+    article_p = subparsers.add_parser(
+        "article",
+        help="Fetch one research article whole. POST /api/data/research/article.",
+    )
+    article_p.add_argument("channel", help="From a research result.")
+    article_p.add_argument("slug", help="From a research result.")
+    article_p.add_argument("--report", action="store_true", help="Include exact command and HTTP result.")
+    article_p.set_defaults(func=cmd_article)
 
     return parser
 

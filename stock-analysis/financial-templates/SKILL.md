@@ -1,6 +1,6 @@
 ---
 version: 1
-name: anyfinancial-financial-templates
+name: financial-templates
 description: Template-only financial analysis workflows for statement analysis, valuation analysis, company research, industry research, and finance-specific output patterns. Use when the user asks for a financial analysis structure, report outline, model rubric, or reusable instructions rather than live data retrieval.
 ---
 

@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "Backtest a moving-average crossover on AAPL and MSFT over the last couple of years. I want to know if it actually beats buy-and-hold, with realistic costs.",
-      "expected_output": "Agent runs Phase 1-5: installs the engine, collects parameters via the two forms (defaults fine), fetches AAPL+MSFT daily bars via anyfinancial, runs in-sample and out-of-sample SMA crossover with commission+slippage, and reports the fixed template comparing OOS vs buy-and-hold with limitations stated.",
+      "expected_output": "Agent runs Phase 1-5: installs the engine, collects parameters via the two forms (defaults fine), fetches AAPL+MSFT daily bars via the data sub-skill, runs in-sample and out-of-sample SMA crossover with commission+slippage, and reports the fixed template comparing OOS vs buy-and-hold with limitations stated.",
       "files": []
     },
     {

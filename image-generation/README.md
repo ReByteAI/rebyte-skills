@@ -48,5 +48,4 @@ curl -X POST "$API_URL/api/data/images/generate" \
 
 ## Complements
 
-- **deep-research** - Generate illustrations for reports
 - **market-data** - Stock data for financial visualizations

@@ -17,13 +17,13 @@ Validate that the skill exposes exactly the market-agnostic workflow
 
 | # | Command | Expected |
 |---|---------|----------|
-| 1 | `python3 scripts/anyfinancial_cli.py catalog --report` | Calls financial/catalog; lists every table + one-line description (add `--market us\|cn` to filter) |
-| 2 | `python3 scripts/anyfinancial_cli.py schema cn.bars_1m --report` | Calls financial/schema; returns live per-column `name`, `type`, `doc` (pass several tables to batch) |
-| 3 | `python3 scripts/anyfinancial_cli.py query "SELECT * FROM cn.bars_1m LIMIT 10" --report` | Calls SQL endpoint and reports HTTP result, `rowCount`, first 3 rows, and error |
-| 4 | `python3 scripts/anyfinancial_cli.py schema "cn.bars_1m; DROP TABLE x"` | Fails before network request (invalid table identifier) |
-| 5 | `python3 scripts/anyfinancial_cli.py query "DELETE FROM cn.bars_1m WHERE 1=1"` | Fails before network request |
-| 6 | `python3 scripts/anyfinancial_cli.py query "SELECT 1; SELECT 2"` | Fails before network request |
-| 7 | `python3 -S scripts/anyfinancial_cli.py catalog --report` | Uses the stdlib fallback path; calls catalog or reports the underlying TLS/connection reason clearly |
+| 1 | `python3 scripts/financial_cli.py catalog --report` | Calls financial/catalog; lists every table + one-line description (add `--market us\|cn` to filter) |
+| 2 | `python3 scripts/financial_cli.py schema cn.bars_1m --report` | Calls financial/schema; returns live per-column `name`, `type`, `doc` (pass several tables to batch) |
+| 3 | `python3 scripts/financial_cli.py query "SELECT * FROM cn.bars_1m LIMIT 10" --report` | Calls SQL endpoint and reports HTTP result, `rowCount`, first 3 rows, and error |
+| 4 | `python3 scripts/financial_cli.py schema "cn.bars_1m; DROP TABLE x"` | Fails before network request (invalid table identifier) |
+| 5 | `python3 scripts/financial_cli.py query "DELETE FROM cn.bars_1m WHERE 1=1"` | Fails before network request |
+| 6 | `python3 scripts/financial_cli.py query "SELECT 1; SELECT 2"` | Fails before network request |
+| 7 | `python3 -S scripts/financial_cli.py catalog --report` | Uses the stdlib fallback path; calls catalog or reports the underlying TLS/connection reason clearly |
 
 ## Manual Connectivity
 

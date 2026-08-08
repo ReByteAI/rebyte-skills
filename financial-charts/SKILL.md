@@ -14,7 +14,7 @@ displays the chart in the Workbench.
 
 ## Workflow
 
-1. **Get the data.** Pull OHLCV via the anyfinancial `data` skill (or
+1. **Get the data.** Pull OHLCV via the stock-analysis `data` sub-skill (or
    whatever source the task provides). Compute indicator series yourself in
    Python (recipes below).
 2. **Write the data file** to `/code/outputs/<slug>.json` (create the

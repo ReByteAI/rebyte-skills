@@ -1,8 +1,8 @@
-# Data sources (anyfinancial)
+# Data sources (financial data lake)
 
 Price data comes from the Rebyte Financial Data Service — the read-only SQL
-service the **anyfinancial** skill exposes (`/api/data/financial/sql`).
-`fetch_data.py` uses the anyfinancial CLI when present, else an inline client
+service the `data` sub-skill exposes (`/api/data/financial/sql`).
+`fetch_data.py` uses the financial CLI when present, else an inline client
 with identical auth.
 
 ## Tables used
@@ -29,7 +29,7 @@ before assuming a dataset doesn't exist.
 > for columns. Coverage checks are plain SQL:
 
 ```bash
-python3 ../data/scripts/anyfinancial_cli.py query \
+python3 ../data/scripts/financial_cli.py query \
   "SELECT count(*) n, min(t) oldest, max(t) newest FROM us.eod WHERE ticker='AAPL'"
 ```
 

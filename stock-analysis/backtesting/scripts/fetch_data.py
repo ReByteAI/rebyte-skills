@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Fetch OHLCV bars from the anyfinancial data service into a local CSV cache.
+"""Fetch OHLCV bars from the financial data lake into a local CSV cache.
 
 Data layer
 ----------
 This is the *data-retrieval* half of the backtesting skill. It reads price bars
 from the Rebyte Financial Data Service — the same read-only SQL service the
-``anyfinancial`` skill exposes (``/api/data/financial/sql``, Apache DataFusion).
+the ``data`` sub-skill exposes (``/api/data/financial/sql``, Apache DataFusion).
 
 Interval → source table:
     1day  -> us.eod       (columns: ticker, t, o, h, l, c, v, n)
     1min  -> us.bars_1m   (columns: ticker, t, o, h, l, c, v, n)
 
-If the ``anyfinancial`` CLI is found (env ``ANYFINANCIAL_CLI`` or a common path)
+If the financial CLI is found (env ``FINANCIAL_CLI`` or a common path)
 it is used verbatim (honouring its read-only guard); otherwise an inline client
 with identical auth resolution (env → ``rebyte-auth`` → ``auth.json``) is used.
 
@@ -37,7 +37,7 @@ DEFAULT_API = "https://api.rebyte.ai"
 
 
 # --------------------------------------------------------------------------- #
-# auth (mirrors the anyfinancial resolution order)
+# auth (mirrors the financial CLI resolution order)
 # --------------------------------------------------------------------------- #
 def _read_auth() -> dict[str, Any]:
     try:
@@ -66,14 +66,14 @@ def _token() -> str:
 
 
 # --------------------------------------------------------------------------- #
-# SQL execution — prefer the anyfinancial CLI, fall back to an inline client
+# SQL execution — prefer the financial CLI, fall back to an inline client
 # --------------------------------------------------------------------------- #
 def _find_cli() -> Optional[str]:
-    cand = os.environ.get("ANYFINANCIAL_CLI")
+    cand = os.environ.get("FINANCIAL_CLI")
     paths = [cand] if cand else []
     skill_root = Path(__file__).resolve().parent.parent.parent
     paths += [
-        str(skill_root / "data/scripts/anyfinancial_cli.py"),
+        str(skill_root / "data/scripts/financial_cli.py"),
     ]
     for p in paths:
         if p and Path(p).is_file():
@@ -89,7 +89,7 @@ def run_sql(sql: str, *, timeout: int = 120) -> list[dict[str, Any]]:
             capture_output=True, text=True, timeout=timeout,
         )
         if proc.returncode != 0:
-            raise RuntimeError(f"anyfinancial CLI failed: {proc.stderr.strip() or proc.stdout.strip()}")
+            raise RuntimeError(f"financial CLI failed: {proc.stderr.strip() or proc.stdout.strip()}")
         body = json.loads(proc.stdout)
         return _rows(body)
     # inline client
@@ -161,7 +161,7 @@ def write_csv(path: Path, rows: list[dict]) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Fetch bars from anyfinancial into a local CSV cache.")
+    ap = argparse.ArgumentParser(description="Fetch bars from the financial data lake into a local CSV cache.")
     ap.add_argument("--config", required=True, help="Backtest config JSON (uses its data section).")
     ap.add_argument("--force", action="store_true", help="Re-fetch even if a cache file exists.")
     args = ap.parse_args()

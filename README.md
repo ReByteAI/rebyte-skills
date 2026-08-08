@@ -26,7 +26,6 @@ rebyte-skills/
 ├── _common/              # Shared SKILL.md includes (e.g. auth patterns)
 ├── pdf/
 │   └── SKILL.md
-├── deep-research/
 │   └── SKILL.md
 └── …
 ```
