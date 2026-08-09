@@ -189,7 +189,7 @@ curl -fsS -X POST "$API_URL/api/data/research/news" \
 
 Body: `text` (required) · `ticker` · `since`/`until` (ISO dates) · `sort`
 (`relevance` default, or `recent`) · `limit` (default 5, max 25).
-Each result: `id`, `title`, `published_at`, `tickers`, `score`, `snippet`.
+Each result: `title`, `published_at`, `tickers`, `score`, `snippet`.
 
 ### Research — what it means
 
@@ -212,8 +212,10 @@ curl -fsS -X POST "$API_URL/api/data/research/search" \
 ```
 
 Body: `text` (required) · `channel` · `since`/`until` · `limit` (default 5, max 25).
-Each result: `channel`, `slug`, `chunk_index`, `title`, `published_at`, `score`,
-`snippet`. Filter one publication with `channel`: `semianalysis`, `semivision`,
+Each result: `channel`, `publication`, `slug`, `chunk_index`, `title`,
+`published_at`, `score`, `snippet`. `channel` is the filter value (a slug);
+`publication` is how the source is written in a report.
+Filter one publication with `channel`: `semianalysis`, `semivision`,
 `macrocharts`, `capitalwars`, `citrini`, `doomberg`, `michaeljburry`, `fundaai`,
 `photoncap`, `jamesbulltard`, `viksnewsletter`, `asymmetricalbets`, `damnang`.
 Search unfiltered first — you usually want the best argument, not one author's.
@@ -226,7 +228,26 @@ python3 scripts/financial_cli.py context capitalwars <slug> 2 --radius 1   # nei
 python3 scripts/financial_cli.py article capitalwars <slug>                # the whole piece
 ```
 
-Cite publication and publication date whenever you use a result.
+### Citing what you find
+
+Reports are internal, and so is every source reachable here — our data lake, or
+our copy of a paid subscription. **Never put a URL, `slug`, `chunk_index`, or
+any other response identifier into a report.** None of them resolve for a
+reader; a dead link reads worse than no link. Nothing in these responses is a
+public address, and none of the indices even store a URL.
+
+Identify the source in prose instead, richly enough that a reader with the same
+subscription could find it:
+
+| Source | Cite as |
+|---|---|
+| Research | `publication` (never the `channel` slug), article title, publication date — "Capital Wars, *Global Liquidity Watch*, 2026-07-18" |
+| News | headline and date; add tickers when that is what makes the item relevant |
+| Lake data | table plus the exact date or range the figure covers — "us.eod, 2026-08-07 close" |
+
+Err toward more attribution, not less. When several publications support one
+point, name them all — for an internal reader, four sources agreeing is itself
+a finding.
 
 > Search covers news and research articles. Every other table is SQL-only — use
 > the three-step SQL flow above for them.
