@@ -17,7 +17,7 @@ agent's system prompt; use them as Bearer token and base URL.
 | Pillar | When |
 |---|---|
 | this file | Analysis playbooks: price checks, company overviews, comparisons, fundamentals, technicals |
-| [`data/SKILL.md`](data/SKILL.md) | Data routing and mechanics: direct two-date prices, full 19-table lake catalog (US + CN), SQL patterns, news + paid-research search, error rules. **Read before fetching data.** |
+| [`data/SKILL.md`](data/SKILL.md) | Data routing and mechanics: direct two-date prices, full 19-table lake catalog (US + CN), SQL patterns, news + research search, error rules. **Read before fetching data.** |
 | [`backtesting/SKILL.md`](backtesting/SKILL.md) | Strategy simulation: 5-phase NautilusTrader workflow ending in a backtest result bundle |
 | [`financial-templates/SKILL.md`](financial-templates/SKILL.md) | Analysis structures (DCF, comps, memo formats) with no data calls |
 | [`report-style/README.md`](report-style/README.md) | Kami design system for every HTML report this skill delivers |
@@ -33,7 +33,7 @@ Lightweight Charts).
 | **Direct recent-price APIs** | Price-only OHLCV bars for the current and previous exchange-local calendar dates. US minute bars use `stocks/bars` with `interval: "1min"`; China minute bars use `cn-stocks/bars_1min`. | `POST $API_URL/api/data/stocks/bars`, `POST $API_URL/api/data/cn-stocks/bars`, or `POST $API_URL/api/data/cn-stocks/bars_1min` — see `data/SKILL.md` |
 | **Rebyte financial data lake** | US: daily + 1-minute bars, news, SEC-filing fundamentals, splits, dividends, short data, ticker universe, IPOs. CN A-shares: daily + 1-minute bars, valuation snapshots, financial statements, money flow, unusual-move disclosures. | Read-only SQL via `POST $API_URL/api/data/financial/sql` — see `data/SKILL.md` |
 | **News archive** | US equity news coverage back to 2016, searchable by meaning | `POST $API_URL/api/data/research/news` — see `data/SKILL.md` |
-| **Paid research library** | ~4,300 long-form articles from 13 subscriber-only investment newsletters (SemiAnalysis, SemiVision, MacroCharts, Capital Wars, Citrini, Doomberg, Michael J Burry and others), 2020 to today. Primary analysis behind paywalls that web search cannot reach — use it for theses, debates, and mechanisms. | `POST $API_URL/api/data/research/search`, then `/context` or `/article` — see `data/SKILL.md` |
+| **Research library** | ~4,300 long-form articles from 13 investment research publications (SemiAnalysis, SemiVision, MacroCharts, Capital Wars, Citrini, Doomberg, Michael J Burry and others), 2020 to today. Primary analysis by named practitioners — use it for theses, debates, and mechanisms. | `POST $API_URL/api/data/research/search`, then `/context` or `/article` — see `data/SKILL.md` |
 | **SEC EDGAR** | Full filing text (10-K, 10-Q, 8-K), filing sections, insider (Form 4) trades | `edgartools` Python library — see `references/sec-edgar.md` |
 
 **Route by freshness.** Use the direct APIs for "current", "today", "latest

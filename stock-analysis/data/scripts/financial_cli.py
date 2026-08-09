@@ -422,7 +422,7 @@ def cmd_news(args) -> None:
 
 
 def cmd_research(args) -> None:
-    """Hybrid keyword + semantic search over the paid research library."""
+    """Hybrid keyword + semantic search over the research library."""
     payload: dict[str, Any] = {"text": _require_text(args), "limit": args.limit}
     if args.channel:
         payload["channel"] = args.channel
@@ -499,7 +499,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     research_p = subparsers.add_parser(
         "research",
-        help="Search the paid research library. POST /api/data/research/search.",
+        help="Search the research library. POST /api/data/research/search.",
     )
     research_p.add_argument("text", help="Natural-language query, e.g. \"global liquidity and central bank balance sheets\".")
     research_p.add_argument("--channel", help="Restrict to one publication, e.g. semianalysis, citrini, doomberg.")

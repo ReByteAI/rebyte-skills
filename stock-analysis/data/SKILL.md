@@ -1,6 +1,6 @@
 ---
 name: data
-description: Financial data access for stock-analysis. Use direct price APIs for the current and previous exchange-local calendar dates, and the Rebyte Financial Data Service for historical prices, fundamentals, screening, and backtesting through read-only SQL, plus meaning-based search over news and a library of paid investment research.
+description: Financial data access for stock-analysis. Use direct price APIs for the current and previous exchange-local calendar dates, and the Rebyte Financial Data Service for historical prices, fundamentals, screening, and backtesting through read-only SQL, plus meaning-based search over news and the research library.
 ---
 
 # Financial Data Access
@@ -17,9 +17,8 @@ Access financial data through the Relay Data API. Four modes:
   **catalog → schema → query.**
 - **News search** (`research/news`) — search US equity news coverage by
   *meaning*, not keywords. This is data access, not a separate News subcommand.
-- **Research search** (`research/search`) — search a library of paid,
-  subscriber-only investment newsletters. Use it for theses and mechanisms;
-  use news for events.
+- **Research search** (`research/search`) — search the investment research
+  library. Use it for theses and mechanisms; use news for events.
 
 Use this sub-skill for both analysis and the **Backtesting** pillar: fetch recent
 prices, discover lake tables, inspect schemas, pull historical bars, validate
@@ -193,13 +192,14 @@ Each result: `title`, `published_at`, `tickers`, `score`, `snippet`.
 
 ### Research — what it means
 
-A library of paid, subscriber-only investment newsletters: ~4,300 long-form
-articles from 13 publications, 2020 to today, including SemiAnalysis and
-SemiVision (semiconductors, datacenter buildout), MacroCharts and Capital Wars
-(global liquidity, cycles), Citrini (thematic trades), Doomberg (energy and
-commodities), and Michael J Burry. This is primary analysis behind paywalls that
-a web search cannot reach — reach for it on any thesis, debate, or mechanism
-question, before falling back on general knowledge.
+The investment research library: ~4,300 long-form articles from 13
+publications, 2020 to today, including SemiAnalysis and SemiVision
+(semiconductors, datacenter buildout), MacroCharts and Capital Wars (global
+liquidity, cycles), Citrini (thematic trades), Doomberg (energy and
+commodities), and Michael J Burry. This is primary analysis by named
+practitioners — reach for it on any thesis, debate, or mechanism question,
+before falling back on general knowledge. The agent's system prompt carries the
+full channel table with each publication's beat.
 
 ```bash
 python3 scripts/financial_cli.py research "global liquidity and central bank balance sheets"
@@ -230,14 +230,14 @@ python3 scripts/financial_cli.py article capitalwars <slug>                # the
 
 ### Citing what you find
 
-Reports are internal, and so is every source reachable here — our data lake, or
-our copy of a paid subscription. **Never put a URL, `slug`, `chunk_index`, or
-any other response identifier into a report.** None of them resolve for a
-reader; a dead link reads worse than no link. Nothing in these responses is a
-public address, and none of the indices even store a URL.
+Reports are internal, and so is every source reachable here — our data lake and
+our research library. **Never put a URL, `slug`, `chunk_index`, or any other
+response identifier into a report.** None of them resolve for a reader; a dead
+link reads worse than no link. Nothing in these responses is a public address,
+and none of the indices even store a URL.
 
-Identify the source in prose instead, richly enough that a reader with the same
-subscription could find it:
+Identify the source in prose instead, richly enough that a reader could find
+the piece:
 
 | Source | Cite as |
 |---|---|
